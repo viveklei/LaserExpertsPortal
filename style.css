@@ -85,10 +85,14 @@ svg { display: block; flex-shrink: 0; }
 
 #login-page {
   min-height: 100vh;
-  display: flex;
+  display: none;
   align-items: stretch;
   position: relative;
   overflow: hidden;
+}
+
+#login-page.active {
+  display: flex;
 }
 
 /* Background decoration */
