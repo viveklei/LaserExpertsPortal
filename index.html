@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laser Experts India Portal</title>
+  <meta name="description" content="Laser Experts India — Your unified portal to access all internal business applications securely in one place." />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════ LOGIN PAGE ═══════════════════════════ -->
+  <div id="login-page" class="page active">
+    <div class="login-bg">
+      <div class="login-bg-shape shape-1"></div>
+      <div class="login-bg-shape shape-2"></div>
+      <div class="login-bg-shape shape-3"></div>
+    </div>
+
+    <div class="login-container">
+      <!-- Left panel -->
+      <div class="login-left">
+        <div class="login-brand">
+          <img src="logo.png" alt="Laser Experts India Logo" class="login-logo" />
+          <div class="login-brand-text">
+            <h1 class="login-brand-name">Laser Experts India</h1>
+            <p class="login-brand-tagline">Unified Application Portal</p>
+          </div>
+        </div>
+        <div class="login-illustration">
+          <div class="laser-beam beam-1"></div>
+          <div class="laser-beam beam-2"></div>
+          <div class="laser-beam beam-3"></div>
+          <div class="laser-node node-center"></div>
+          <div class="laser-node node-1"></div>
+          <div class="laser-node node-2"></div>
+          <div class="laser-node node-3"></div>
+        </div>
+        <div class="login-left-footer">
+          <p>Access all your business applications from a single secure gateway</p>
+          <div class="login-features">
+            <div class="login-feature">
+              <span class="feature-icon">🔒</span>
+              <span>Secure Single Sign-On</span>
+            </div>
+            <div class="login-feature">
+              <span class="feature-icon">⚡</span>
+              <span>Instant App Access</span>
+            </div>
+            <div class="login-feature">
+              <span class="feature-icon">🌐</span>
+              <span>All Apps in One Place</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right panel: form -->
+      <div class="login-right">
+        <div class="login-card">
+          <div class="login-card-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to access the portal</p>
+          </div>
+
+          <div id="login-error" class="login-error hidden">
+            <span class="error-icon">⚠</span>
+            <span id="login-error-msg">Invalid credentials. Please try again.</span>
+          </div>
+
+          <!-- ── Google Sign-In Button ── -->
+          <div class="google-signin-wrap">
+            <!-- Rendered by Google GSI SDK when CLIENT_ID is set -->
+            <div id="google-btn-container"></div>
+            <!-- Fallback custom button shown when SDK not yet configured -->
+            <button class="btn-google" id="btn-google-custom" type="button">
+              <svg class="google-icon" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+          </div>
+
+          <!-- OR divider -->
+          <div class="or-divider">
+            <span class="or-line"></span>
+            <span class="or-text">or sign in with username</span>
+            <span class="or-line"></span>
+          </div>
+
+          <form id="login-form" class="login-form" autocomplete="off">
+            <div class="form-group">
+              <label for="username">Username or Email</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </span>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </span>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required />
+                <button type="button" class="toggle-password" id="toggle-pwd" aria-label="Toggle password visibility">
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <label class="checkbox-label">
+                <input type="checkbox" id="remember-me" />
+                <span class="checkbox-custom"></span>
+                Remember me
+              </label>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" id="login-btn" class="btn-login">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-loader hidden"></span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </form>
+
+          <div class="login-footer">
+            <p>Having trouble signing in? Contact <a href="mailto:support@laserexpertsindia.com">IT Support</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ DASHBOARD PAGE ═══════════════════════════ -->
+  <div id="dashboard-page" class="page">
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar" id="main-navbar">
+      <div class="navbar-left">
+        <button class="nav-menu-btn" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="navbar-brand">
+          <img src="logo.png" alt="Laser Experts India" class="nav-logo" />
+          <div class="navbar-brand-text">
+            <span class="nav-brand-name">Laser Experts India</span>
+            <span class="nav-brand-sub">Application Portal</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="navbar-center">
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="app-search" placeholder="Search applications…" autocomplete="off" />
+          <kbd class="search-kbd">Ctrl K</kbd>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <button class="nav-icon-btn" id="notif-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-badge">3</span>
+        </button>
+
+        <div class="nav-avatar-wrapper" id="user-menu-trigger">
+          <div class="nav-avatar" id="user-avatar-initials">AD</div>
+          <div class="nav-user-info">
+            <span class="nav-user-name" id="nav-display-name">Admin</span>
+            <span class="nav-user-role">Portal Administrator</span>
+          </div>
+          <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+
+          <!-- Dropdown -->
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="dropdown-header">
+              <div class="dropdown-avatar" id="dropdown-avatar-initials">AD</div>
+              <div>
+                <p class="dropdown-name" id="dropdown-display-name">Admin</p>
+                <p class="dropdown-email" id="dropdown-email">admin@laserexperts.in</p>
+              </div>
+            </div>
+            <hr class="dropdown-divider" />
+            <a href="#" class="dropdown-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              My Profile
+            </a>
+            <a href="#" class="dropdown-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Settings
+            </a>
+            <hr class="dropdown-divider" />
+            <a href="#" class="dropdown-item dropdown-item-danger" id="logout-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign Out
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="main-sidebar">
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">Navigation</p>
+        <nav class="sidebar-nav">
+          <a href="#" class="sidebar-link active" data-filter="all">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            All Applications
+            <span class="sidebar-badge" id="all-count">0</span>
+          </a>
+          <a href="#" class="sidebar-link" data-filter="favourites">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Favourites
+            <span class="sidebar-badge" id="fav-count">0</span>
+          </a>
+          <a href="#" class="sidebar-link" data-filter="recent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Recently Used
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">Categories</p>
+        <nav class="sidebar-nav" id="category-nav">
+          <!-- Populated by JS -->
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="status-dot online"></span>
+          <span class="status-text">All systems operational</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content" id="main-content">
+
+      <!-- Page header -->
+      <div class="content-header">
+        <div>
+          <h2 class="content-title" id="section-title">All Applications</h2>
+          <p class="content-subtitle" id="section-subtitle">Select an application to launch</p>
+        </div>
+        <div class="header-actions">
+          <div class="view-toggle">
+            <button class="view-btn active" id="grid-view-btn" aria-label="Grid view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="view-btn" id="list-view-btn" aria-label="List view">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
+          <select class="sort-select" id="sort-select" aria-label="Sort applications">
+            <option value="name">Sort: A–Z</option>
+            <option value="category">Sort: Category</option>
+            <option value="recent">Sort: Recently Added</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">Total Apps</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-online">0</span>
+          <span class="stat-label">Online</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-categories">0</span>
+          <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-favs">0</span>
+          <span class="stat-label">Favourites</span>
+        </div>
+      </div>
+
+      <!-- No results -->
+      <div class="no-results hidden" id="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h3>No applications found</h3>
+        <p>Try adjusting your search or filter criteria</p>
+      </div>
+
+      <!-- App grid -->
+      <div class="app-grid" id="app-grid">
+        <!-- App cards injected by JS -->
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════ LAUNCH MODAL ═══════════════════════════ -->
+  <div class="modal-overlay hidden" id="launch-modal">
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="modal-app-icon" id="modal-app-icon"></div>
+      <h3 class="modal-title" id="modal-app-name"></h3>
+      <p class="modal-desc" id="modal-app-desc"></p>
+      <div class="modal-meta">
+        <span class="modal-badge" id="modal-app-category"></span>
+        <span class="modal-status" id="modal-app-status"></span>
+      </div>
+      <div class="modal-url">
+        <span class="modal-url-label">URL</span>
+        <span class="modal-url-value" id="modal-app-url"></span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="modal-cancel">Cancel</button>
+        <a class="btn-primary" id="modal-launch-link" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Launch Application
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="apps.js"></script>
+  <script src="google-auth.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
