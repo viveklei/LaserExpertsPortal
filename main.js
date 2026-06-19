@@ -537,7 +537,7 @@ function openModal(id) {
                          app.url.toLowerCase().includes('report');
     
     // Append SSO params if user is authenticated
-    let launchUrl = isWorkReport ? './wrok report deployed/dist/' : app.url;
+    let launchUrl = isWorkReport ? './work-report/dist/' : app.url;
     if (state.currentUser && launchUrl) {
       try {
         const urlObj = new URL(launchUrl, window.location.origin);
@@ -577,7 +577,7 @@ $('modal-launch-link').addEventListener('click', (e) => {
                          state.currentApp.id.toLowerCase().includes('report') ||
                          state.currentApp.url.toLowerCase().includes('report');
 
-    let targetUrl = isWorkReport ? './wrok report deployed/dist/' : state.currentApp.url;
+    let targetUrl = isWorkReport ? './work-report/dist/' : state.currentApp.url;
 
     // Determine if it should launch in the embedded portal iframe
     const isInternal = isWorkReport ||
