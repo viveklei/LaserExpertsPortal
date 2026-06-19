@@ -1599,8 +1599,67 @@ svg { display: block; flex-shrink: 0; }
   background: var(--primary-pale);
 }
 
-.card-delete-btn:hover {
-  color: var(--danger);
-  background: var(--danger-bg);
 }
 
+/* ─── Admin App Management Modal Styles ─── */
+#manage-app-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+#manage-app-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+#manage-app-form label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-500);
+}
+
+#manage-app-form input[type="text"],
+#manage-app-form input[type="url"],
+#manage-app-form textarea,
+#manage-app-form select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-page);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text-900);
+  transition: all var(--transition);
+  outline: none;
+}
+
+#manage-app-form input[type="text"]:focus,
+#manage-app-form input[type="url"]:focus,
+#manage-app-form textarea:focus,
+#manage-app-form select:focus {
+  background: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+}
+
+#manage-app-form textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+#manage-app-form input[type="color"] {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+  cursor: pointer;
+  padding: 2px;
+  outline: none;
+}
