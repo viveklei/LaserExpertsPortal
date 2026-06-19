@@ -87,9 +87,9 @@ const APPS = [
   },
   {
     id: "reports",
-    name: "Analytics & Reports",
-    desc: "Business intelligence dashboard with sales, production, and performance analytics.",
-    url: "https://reports.yourdomain.com",
+    name: "Work Report App",
+    desc: "Generate professional daily, weekly, and monthly work reports for Laser Expert India.",
+    url: "./wrok report deployed/dist/",
     icon: "📊",
     iconBg: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
     accent: "#7c3aed",

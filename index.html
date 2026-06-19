@@ -513,6 +513,26 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════ EMBEDDED APP PAGE ═══════════════════════════ -->
+  <div id="embedded-app-page" class="page">
+    <div class="embedded-app-header" style="height: 60px; background: #1e293b; color: white; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1.5px solid #334155; position: relative; z-index: 10;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-back-to-portal" style="background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Portal
+        </button>
+        <span id="embedded-app-title" style="font-weight: 600; font-size: 1.1rem; font-family: sans-serif;">Application</span>
+      </div>
+      <div>
+        <span style="font-size: 0.85rem; color: #38bdf8; background: rgba(56,189,248,0.15); border: 1.5px solid rgba(56,189,248,0.3); padding: 4px 12px; border-radius: 9999px; font-weight: 600; font-family: sans-serif;">Single Sign-On Active</span>
+      </div>
+    </div>
+    <iframe id="embedded-app-iframe" src="" style="width: 100%; height: calc(100vh - 60px); border: none; background: #0f172a; display: block;"></iframe>
+  </div>
+
   <!-- Toast -->
   <div class="toast-container" id="toast-container"></div>
 

@@ -567,9 +567,59 @@ $('modal-launch-link').addEventListener('click', (e) => {
       e.preventDefault();
       return;
     }
-    showToast(`Launching ${state.currentApp.name}…`, 'success', '🚀');
-    setTimeout(closeModal, 300);
+
+    // Determine if it should launch in the embedded portal iframe
+    const isInternal = state.currentApp.url.startsWith('.') || 
+                       state.currentApp.url.startsWith('/') || 
+                       state.currentApp.url.includes(window.location.host) ||
+                       state.currentApp.id === 'reports';
+
+    if (isInternal) {
+      e.preventDefault();
+      showToast(`Launching ${state.currentApp.name} inside Portal…`, 'success', '🚀');
+      launchEmbeddedApp(state.currentApp.name, state.currentApp.url);
+    } else {
+      showToast(`Launching ${state.currentApp.name}…`, 'success', '🚀');
+      setTimeout(closeModal, 300);
+    }
   }
+});
+
+// Helper to launch app in embedded iframe
+function launchEmbeddedApp(name, url) {
+  // Hide main pages
+  loginPage.classList.remove('active');
+  dashPage.classList.remove('active');
+
+  const embeddedPage = $('embedded-app-page');
+  const iframe = $('embedded-app-iframe');
+  const title = $('embedded-app-title');
+
+  title.textContent = name;
+
+  // Append SSO parameters dynamically
+  let targetUrl = url;
+  if (state.currentUser && targetUrl) {
+    try {
+      const urlObj = new URL(targetUrl, window.location.origin);
+      urlObj.searchParams.set('sso_email', state.currentUser.email);
+      urlObj.searchParams.set('sso_name', state.currentUser.name);
+      targetUrl = urlObj.toString();
+    } catch (err) {
+      console.error("SSO URL construction error:", err);
+    }
+  }
+
+  iframe.src = targetUrl;
+  embeddedPage.classList.add('active');
+  closeModal();
+}
+
+// Back to portal listener
+$('btn-back-to-portal').addEventListener('click', () => {
+  $('embedded-app-page').classList.remove('active');
+  $('embedded-app-iframe').src = '';
+  dashPage.classList.add('active');
 });
 
 /* ═══════════════════════════════════════════════════
