@@ -20,7 +20,7 @@
  * ─────────────────────────────────────────────────────────
  */
 
-const GOOGLE_CLIENT_ID = '1045773947510-7s538d7jpfk3o3f2coc32mt2elpjrhvg.apps.googleusercontent.com';  // ← Paste your Client ID here
+const GOOGLE_CLIENT_ID = '1014113880303-fco3csrmb627vc5d7rq76emmd71rjteq.apps.googleusercontent.com';  // ← Paste your Client ID here
 
 /* ─── Internal state ─────────────────────────────────── */
 const _goog = {
@@ -42,17 +42,17 @@ function _decodeJWT(token) {
 }
 
 /* ─── Called by Google GSI SDK after user consents ───── */
-window.handleGoogleCredentialResponse = function(response) {
+window.handleGoogleCredentialResponse = function (response) {
   // If Firebase config is not fully set up yet, fall back to simple login
   if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0 || firebaseConfig.apiKey === "YOUR_API_KEY") {
     const payload = _decodeJWT(response.credential);
     if (payload) {
       const user = {
-        username:  payload.email,
-        name:      payload.name,
-        email:     payload.email,
-        picture:   payload.picture,
-        role:      'Google Account',
+        username: payload.email,
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+        role: 'Google Account',
         loginType: 'google',
       };
       doLogin(user);
@@ -65,10 +65,10 @@ window.handleGoogleCredentialResponse = function(response) {
 
   // Firebase auth flow
   const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
-  
+
   // Show a loading/signing in toast
   showToast("Authenticating with Firebase...", "info", "🔒");
-  
+
   firebase.auth().signInWithCredential(credential)
     .catch((error) => {
       console.error("Firebase Sign-In Error", error);
@@ -78,7 +78,7 @@ window.handleGoogleCredentialResponse = function(response) {
 
 /* ─── Show an error on the login card ───────────────── */
 function showGoogleError(msg) {
-  const errEl  = document.getElementById('login-error');
+  const errEl = document.getElementById('login-error');
   const errMsg = document.getElementById('login-error-msg');
   if (errEl && errMsg) {
     errMsg.textContent = msg;
@@ -103,7 +103,7 @@ function _showSetupNotice() {
   let notice = document.getElementById('google-setup-notice');
   if (!notice) {
     notice = document.createElement('div');
-    notice.id        = 'google-setup-notice';
+    notice.id = 'google-setup-notice';
     notice.className = 'setup-notice';
     notice.innerHTML = `
       <span class="setup-notice-icon">⚙️</span>
@@ -142,7 +142,7 @@ function _initGoogleSignIn() {
 
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
-    callback:  window.handleGoogleCredentialResponse,
+    callback: window.handleGoogleCredentialResponse,
     auto_select: false,
     cancel_on_tap_outside: true,
   });
@@ -151,10 +151,10 @@ function _initGoogleSignIn() {
   const container = document.getElementById('google-btn-container');
   if (container) {
     google.accounts.id.renderButton(container, {
-      type:  'standard',
+      type: 'standard',
       theme: 'outline',
-      size:  'large',
-      text:  'continue_with',
+      size: 'large',
+      text: 'continue_with',
       shape: 'rectangular',
       logo_alignment: 'left',
       width: 340,
