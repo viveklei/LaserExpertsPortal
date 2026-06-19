@@ -1,0 +1,7 @@
+# SSH Keys
+id_github_deploy
+id_github_deploy.pub
+
+# Local configuration & setup
+setup_vps.py
+.DS_Store
