@@ -158,43 +158,7 @@ function _initGoogleSignIn() {
   }
 }
 
-/* ─── Patch doLogin in main.js to handle Google photo ── */
-// We override the user avatar display to show the Google profile picture
-const _origDoLogin = typeof doLogin === 'function' ? doLogin : null;
-
-function _patchNavAvatar(user) {
-  if (!user || !user.picture) return;
-
-  const navAvatar  = document.getElementById('user-avatar-initials');
-  const dropAvatar = document.getElementById('dropdown-avatar-initials');
-
-  if (navAvatar) {
-    navAvatar.innerHTML = `<img src="${user.picture}" alt="${user.name}" />`;
-    navAvatar.classList.add('has-photo');
-  }
-
-  if (dropAvatar) {
-    dropAvatar.innerHTML = `<img src="${user.picture}" alt="${user.name}" />`;
-    dropAvatar.classList.add('has-photo');
-  }
-}
-
-// Hook into doLogin to patch avatar after Google login
-// main.js will call doLogin(), which triggers initDashboard()
-// We add a MutationObserver to detect when the dashboard becomes active
-const _avatarObserver = new MutationObserver(() => {
-  const session = sessionStorage.getItem('lei_user');
-  if (session) {
-    try {
-      const u = JSON.parse(session);
-      if (u.loginType === 'google' && u.picture) {
-        _patchNavAvatar(u);
-      }
-    } catch(e) {}
-  }
-});
-
-_avatarObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+/* ─── End of Google Sign-In script ─── */
 
 /* ─── Boot ─────────────────────────────────────────── */
 // Wait for DOM to be ready
