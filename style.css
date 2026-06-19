@@ -1318,6 +1318,14 @@ svg { display: block; flex-shrink: 0; }
 .card-launch-btn svg { width: 14px; height: 14px; }
 .card-launch-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,86,219,0.3); }
 .card-launch-btn:active { transform: translateY(0); }
+.card-launch-btn:disabled {
+  background: var(--text-100) !important;
+  color: var(--text-300) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
 
 /* List mode overrides */
 .app-grid.list-mode .app-card {

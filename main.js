@@ -399,7 +399,7 @@ function renderCard(app) {
 
       <div class="card-footer">
         <span class="card-category" style="background:${app.catBg};color:${app.catColor}">${app.category}</span>
-        <button class="card-launch-btn" data-launch="${app.id}">
+        <button class="card-launch-btn" data-launch="${app.id}" ${app.status === 'offline' || app.status === 'maintenance' ? 'disabled title="Application is currently offline or under maintenance"' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
             <polyline points="15 3 21 3 21 9"/>
@@ -457,7 +457,21 @@ function openModal(id) {
   $('modal-app-category').style.background = app.catBg;
   $('modal-app-category').style.color      = app.catColor;
   $('modal-app-status').textContent     = statusText[app.status] || app.status;
-  $('modal-launch-link').href           = app.url;
+  const isOffline = app.status === 'offline' || app.status === 'maintenance';
+  const launchLink = $('modal-launch-link');
+  if (isOffline) {
+    launchLink.setAttribute('disabled', 'true');
+    launchLink.style.pointerEvents = 'none';
+    launchLink.style.opacity = '0.5';
+    launchLink.style.cursor = 'not-allowed';
+    launchLink.removeAttribute('href');
+  } else {
+    launchLink.removeAttribute('disabled');
+    launchLink.style.pointerEvents = 'auto';
+    launchLink.style.opacity = '1';
+    launchLink.style.cursor = 'pointer';
+    launchLink.href = app.url;
+  }
 
   launchModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -473,8 +487,13 @@ modalClose.addEventListener('click', closeModal);
 modalCancel.addEventListener('click', closeModal);
 launchModal.addEventListener('click', e => { if (e.target === launchModal) closeModal(); });
 
-$('modal-launch-link').addEventListener('click', () => {
+$('modal-launch-link').addEventListener('click', (e) => {
   if (state.currentApp) {
+    const isOffline = state.currentApp.status === 'offline' || state.currentApp.status === 'maintenance';
+    if (isOffline) {
+      e.preventDefault();
+      return;
+    }
     showToast(`Launching ${state.currentApp.name}…`, 'success', '🚀');
     setTimeout(closeModal, 300);
   }
