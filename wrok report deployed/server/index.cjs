@@ -31,7 +31,7 @@ app.get('/api/health', (req, res) => {
 });
 
 console.log('Express app instance created');
-const PORT = process.env.PORT || 5001; 
+const PORT = process.env.PORT || 5002; 
 const JWT_SECRET = process.env.JWT_SECRET || 'lei-report-portal-secret-key-2026';
 
 console.log(`Final PORT to be used: ${PORT}`);
