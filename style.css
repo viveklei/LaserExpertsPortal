@@ -1567,7 +1567,36 @@ svg { display: block; flex-shrink: 0; }
   .search-kbd { display: none; }
 }
 
-@media (max-width: 480px) {
-  .navbar { padding: 0 12px; }
-  .modal { margin: 12px; padding: 24px 20px; }
 }
+
+/* ─── Admin Card Actions & Form Controls ─── */
+.card-edit-btn, .card-delete-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-300);
+  transition: all var(--transition);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.card-edit-btn svg, .card-delete-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.card-edit-btn:hover {
+  color: var(--primary);
+  background: var(--primary-pale);
+}
+
+.card-delete-btn:hover {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+

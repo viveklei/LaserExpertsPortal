@@ -279,6 +279,14 @@
           <p class="content-subtitle" id="section-subtitle">Select an application to launch</p>
         </div>
         <div class="header-actions">
+          <!-- Admin-only Add App button -->
+          <button class="btn-primary hidden" id="btn-add-app" style="padding: 0.5rem 1rem; font-size: 0.875rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: 0.2s ease;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add App
+          </button>
+          
           <div class="view-toggle">
             <button class="view-btn active" id="grid-view-btn" aria-label="Grid view">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -359,6 +367,76 @@
           Launch Application
         </a>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ APP MANAGEMENT MODAL ═══════════════════════════ -->
+  <div class="modal-overlay hidden" id="manage-modal">
+    <div class="modal" style="max-width: 500px;">
+      <button class="modal-close" id="manage-modal-close" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h3 class="modal-title" id="manage-modal-title">Add New Application</h3>
+      <form id="manage-app-form" style="display:flex; flex-direction:column; gap:1rem; margin-top:1rem;">
+        <input type="hidden" id="manage-app-id" />
+        
+        <div class="form-group">
+          <label for="manage-name">Application Name</label>
+          <input type="text" id="manage-name" required placeholder="e.g. ERP System" style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px;" />
+        </div>
+
+        <div class="form-group">
+          <label for="manage-url">Application URL</label>
+          <input type="url" id="manage-url" required placeholder="https://..." style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px;" />
+        </div>
+
+        <div class="form-group">
+          <label for="manage-desc">Description</label>
+          <textarea id="manage-desc" required placeholder="Short description of the app" style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px; min-height:80px; font-family:inherit; resize:vertical;"></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="manage-category">Category</label>
+            <select id="manage-category" required style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px; background:white;">
+              <option value="Operations">Operations</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Analytics">Analytics</option>
+              <option value="Production">Production</option>
+              <option value="Support">Support</option>
+              <option value="Productivity">Productivity</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="manage-status">Status</label>
+            <select id="manage-status" required style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px; background:white;">
+              <option value="online">Online</option>
+              <option value="offline">Offline</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="manage-icon">Icon (Emoji)</label>
+            <input type="text" id="manage-icon" required placeholder="🚀" style="width:100%; padding:0.625rem; border:1px solid var(--border-color); border-radius:6px;" />
+          </div>
+          <div class="form-group">
+            <label for="manage-accent">Accent Color (Hex)</label>
+            <input type="color" id="manage-accent" value="#1a56db" style="width:100%; height:40px; padding:2px; border:1px solid var(--border-color); border-radius:6px;" />
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:1rem;">
+          <button type="button" class="btn-secondary" id="manage-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-primary">Save Application</button>
+        </div>
+      </form>
     </div>
   </div>
 

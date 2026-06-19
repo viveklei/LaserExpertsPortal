@@ -17,8 +17,8 @@ const USERS = [
    ═══════════════════════════════════════════════════ */
 let state = {
   currentUser: null,
-  apps: [...APPS],
-  filteredApps: [...APPS],
+  apps: JSON.parse(localStorage.getItem('lei_apps')) || [...APPS],
+  filteredApps: [],
   favourites: JSON.parse(localStorage.getItem('lei_favs') || '[]'),
   activeFilter: 'all',
   searchQuery: '',
@@ -137,6 +137,16 @@ function doLogin(user) {
   loginPage.classList.remove('active');
   dashPage.classList.add('active');
   document.body.style.overflow = '';
+
+  // Show/Hide Add Application button based on Admin role
+  const addAppBtn = $('btn-add-app');
+  if (addAppBtn) {
+    if (user.role === 'Portal Administrator') {
+      addAppBtn.classList.remove('hidden');
+    } else {
+      addAppBtn.classList.add('hidden');
+    }
+  }
 
   // Init dashboard
   initDashboard();
@@ -322,6 +332,21 @@ function renderApps() {
         toggleFav(btn.dataset.fav, btn);
       });
     });
+
+    // Bind Admin events
+    appGrid.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        openManageModal(btn.dataset.edit);
+      });
+    });
+
+    appGrid.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deleteApp(btn.dataset.delete);
+      });
+    });
   }
 
   updateStats();
@@ -330,6 +355,25 @@ function renderApps() {
 function renderCard(app) {
   const fav = isFav(app.id);
   const statusMap = { online: '🟢 Online', offline: '⚫ Offline', maintenance: '🟡 Maintenance' };
+  
+  // Show management controls only if logged in as Admin
+  const isAdmin = state.currentUser && state.currentUser.role === 'Portal Administrator';
+  const adminControls = isAdmin ? `
+    <button class="card-edit-btn" data-edit="${app.id}" title="Edit Application">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/>
+      </svg>
+    </button>
+    <button class="card-delete-btn" data-delete="${app.id}" title="Delete Application">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    </button>
+  ` : '';
 
   return `
     <div class="app-card" style="--card-accent:${app.accent}" data-id="${app.id}">
@@ -338,6 +382,7 @@ function renderCard(app) {
           <span class="card-icon-text">${app.icon}</span>
         </div>
         <div class="card-actions">
+          ${adminControls}
           <button class="fav-btn ${fav ? 'active' : ''}" data-fav="${app.id}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24" fill="${fav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -556,6 +601,133 @@ logoutBtn.addEventListener('click', e => {
   e.preventDefault();
   doLogout();
 });
+
+/* ═══════════════════════════════════════════════════
+   APP MANAGEMENT (ADMIN CRUD)
+   ═══════════════════════════════════════════════════ */
+const manageModal = $('manage-modal');
+const manageForm  = $('manage-app-form');
+
+// Show the modal to add a new app
+$('btn-add-app').addEventListener('click', () => {
+  $('manage-modal-title').textContent = "Add New Application";
+  manageForm.reset();
+  $('manage-app-id').value = '';
+  manageModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+});
+
+// Show the modal to edit an existing app
+function openManageModal(id) {
+  const app = state.apps.find(a => a.id === id);
+  if (!app) return;
+
+  $('manage-modal-title').textContent = "Edit Application";
+  $('manage-app-id').value = app.id;
+  $('manage-name').value = app.name;
+  $('manage-url').value = app.url;
+  $('manage-desc').value = app.desc;
+  $('manage-category').value = app.category;
+  $('manage-status').value = app.status;
+  $('manage-icon').value = app.icon;
+  $('manage-accent').value = app.accent || '#1a56db';
+
+  manageModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeManageModal() {
+  manageModal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+$('manage-modal-close').addEventListener('click', closeManageModal);
+$('manage-modal-cancel').addEventListener('click', closeManageModal);
+manageModal.addEventListener('click', e => { if (e.target === manageModal) closeManageModal(); });
+
+// Handle form submission (Add / Edit)
+manageForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const id = $('manage-app-id').value;
+  const name = $('manage-name').value.trim();
+  const url = $('manage-url').value.trim();
+  const desc = $('manage-desc').value.trim();
+  const category = $('manage-category').value;
+  const status = $('manage-status').value;
+  const icon = $('manage-icon').value.trim();
+  const accent = $('manage-accent').value;
+
+  // Category visual styles (matching app registry definitions)
+  const catStyles = {
+    Operations: { bg: '#dbeafe', color: '#1e40af' },
+    Sales:      { bg: '#d1fae5', color: '#15803d' },
+    HR:         { bg: '#fce7f3', color: '#9d174d' },
+    Finance:    { bg: '#d1fae5', color: '#065f46' },
+    Analytics:  { bg: '#ede9fe', color: '#5b21b6' },
+    Production: { bg: '#ffedd5', color: '#9a3412' },
+    Support:    { bg: '#e0e7ff', color: '#3730a3' },
+    Productivity: { bg: '#e0f2fe', color: '#0c4a6e' }
+  };
+
+  const style = catStyles[category] || { bg: '#f1f5f9', color: '#475569' };
+
+  const appData = {
+    id: id || 'app_' + Date.now(),
+    name,
+    desc,
+    url,
+    icon,
+    iconBg: `linear-gradient(135deg, ${accent}22, ${accent}44)`,
+    accent,
+    category,
+    catBg: style.bg,
+    catColor: style.color,
+    status
+  };
+
+  if (id) {
+    // Edit mode
+    const idx = state.apps.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      state.apps[idx] = appData;
+      showToast(`Application "${name}" updated successfully.`, 'success', '✏️');
+    }
+  } else {
+    // Add mode
+    state.apps.push(appData);
+    showToast(`Application "${name}" added successfully.`, 'success', '➕');
+  }
+
+  // Save state
+  localStorage.setItem('lei_apps', JSON.stringify(state.apps));
+  
+  closeManageModal();
+  buildCategoryNav(); // rebuild category filter counts
+  renderApps();
+});
+
+// Delete an app
+function deleteApp(id) {
+  const app = state.apps.find(a => a.id === id);
+  if (!app) return;
+
+  if (confirm(`Are you sure you want to delete the application "${app.name}"?`)) {
+    state.apps = state.apps.filter(a => a.id !== id);
+    
+    // Remove from favourites if present
+    const favIdx = state.favourites.indexOf(id);
+    if (favIdx !== -1) {
+      state.favourites.splice(favIdx, 1);
+      saveFavs();
+    }
+
+    localStorage.setItem('lei_apps', JSON.stringify(state.apps));
+    showToast(`Application "${app.name}" deleted.`, 'info', '🗑️');
+    buildCategoryNav(); // rebuild category filter counts
+    renderApps();
+  }
+}
 
 /* ─── Firebase Auth State Observer ─── */
 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
