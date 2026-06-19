@@ -1783,3 +1783,205 @@ svg { display: block; flex-shrink: 0; }
   }
 }
 
+/* ══════════════════════════════════════════════════════════
+   ENHANCED ANIMATIONS & VISUAL POLISH
+══════════════════════════════════════════════════════════ */
+
+/* ── Idle Mascot Breathing ── */
+.login-mascot-container:not(.shake-error):not(.happy-success):not(.hide-eyes) .login-mascot {
+  animation: mascot-breathe 3s ease-in-out infinite;
+}
+
+@keyframes mascot-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-4px) scale(1.02); }
+}
+
+/* ── Floating Particles on Login Background ── */
+.login-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  animation: float-up linear infinite;
+  will-change: transform, opacity;
+}
+
+.particle:nth-child(odd) {
+  background: rgba(249, 115, 22, 0.12);
+}
+
+.particle:nth-child(3n) {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--drift, 30px)) scale(1);
+    opacity: 0;
+  }
+}
+
+/* ── Staggered Form Element Fade-In ── */
+.login-card.animate-in .login-mascot-container {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.login-card.animate-in .login-card-header {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.login-card.animate-in .google-signin-wrap {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.login-card.animate-in .or-divider {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+.login-card.animate-in .login-form {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+.login-card.animate-in .login-footer {
+  animation: fadeSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Typewriter Cursor Blink ── */
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--primary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 0.7s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── Login → Dashboard Page Transition ── */
+#login-page {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#login-page.exiting {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+}
+
+#dashboard-page {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#dashboard-page.entering {
+  animation: dashboardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dashboardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Enhanced Login Left Panel Scanning Laser ── */
+.login-left .scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(249,115,22,0.6), rgba(255,255,255,0.7), rgba(249,115,22,0.6), transparent);
+  z-index: 2;
+  animation: scan-down 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(249,115,22,0.5));
+}
+
+@keyframes scan-down {
+  0%, 100% { top: 10%; opacity: 0; }
+  10%      { opacity: 1; }
+  90%      { opacity: 1; }
+  50%      { top: 85%; }
+}
+
+/* ── Floating Brand Text Glow ── */
+.login-brand-name {
+  text-shadow: 0 0 30px rgba(255,255,255,0.15);
+}
+
+/* ── Enhanced Input Focus Glow ── */
+.input-wrapper input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,86,219,0.1), 0 0 20px rgba(26,86,219,0.05);
+}
+
+/* ── Button Shimmer Effect ── */
+.btn-login::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.15),
+    transparent
+  );
+  transform: skewX(-15deg);
+  animation: btn-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes btn-shimmer {
+  0%   { left: -100%; }
+  50%  { left: 120%; }
+  100% { left: 120%; }
+}
+
+/* ── Responsive fix for mascot on mobile ── */
+@media (max-width: 768px) {
+  .login-mascot-container {
+    margin-bottom: 8px;
+  }
+  .login-mascot {
+    max-height: 120px;
+  }
+}
+

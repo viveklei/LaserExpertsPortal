@@ -147,14 +147,18 @@ function doLogin(user) {
   if (isLoginPageActive && mascot) {
     mascot.className = 'login-mascot-container happy-success';
     setTimeout(() => {
-      // Switch pages
-      loginPage.classList.remove('active');
-      dashPage.classList.add('active');
-      document.body.style.overflow = '';
-      mascot.className = 'login-mascot-container'; // reset
+      // Smooth transition: fade-out login, then fade-in dashboard
+      loginPage.classList.add('exiting');
+      setTimeout(() => {
+        loginPage.classList.remove('active', 'exiting');
+        dashPage.classList.add('active', 'entering');
+        document.body.style.overflow = '';
+        mascot.className = 'login-mascot-container'; // reset
+        setTimeout(() => dashPage.classList.remove('entering'), 600);
+      }, 500);
     }, 1000);
   } else {
-    // Switch pages immediately
+    // Switch pages immediately (session restore)
     loginPage.classList.remove('active');
     dashPage.classList.add('active');
     document.body.style.overflow = '';
@@ -976,3 +980,82 @@ function initMascotAnimation() {
 // Start mascot animations
 initMascotAnimation();
 
+/* ═══════════════════════════════════════════════════
+   FLOATING PARTICLES
+   ═══════════════════════════════════════════════════ */
+function initParticles() {
+  const container = $('login-particles');
+  if (!container) return;
+
+  const count = 20;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 3; // 3–9px
+    const left = Math.random() * 100;
+    const duration = Math.random() * 12 + 8; // 8–20s
+    const delay = Math.random() * 10;
+    const drift = (Math.random() - 0.5) * 80;
+    p.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      left: ${left}%;
+      --drift: ${drift}px;
+      animation-duration: ${duration}s;
+      animation-delay: ${delay}s;
+    `;
+    container.appendChild(p);
+  }
+}
+
+initParticles();
+
+/* ═══════════════════════════════════════════════════
+   TYPEWRITER WELCOME TEXT
+   ═══════════════════════════════════════════════════ */
+function typewriterEffect() {
+  const header = document.querySelector('.login-card-header h2');
+  if (!header) return;
+
+  const text = header.textContent;
+  header.textContent = '';
+  header.style.minHeight = '1.75rem';
+
+  const cursor = document.createElement('span');
+  cursor.className = 'typewriter-cursor';
+  header.appendChild(cursor);
+
+  let i = 0;
+  function typeNext() {
+    if (i < text.length) {
+      header.insertBefore(document.createTextNode(text[i]), cursor);
+      i++;
+      setTimeout(typeNext, 60 + Math.random() * 40);
+    } else {
+      // Remove cursor after 2 seconds
+      setTimeout(() => { cursor.style.display = 'none'; }, 2000);
+    }
+  }
+
+  // Start after a short delay so the user sees it
+  setTimeout(typeNext, 600);
+}
+
+/* ═══════════════════════════════════════════════════
+   STAGGERED FORM ELEMENTS FADE-IN ON LOAD
+   ═══════════════════════════════════════════════════ */
+function initLoginAnimations() {
+  const loginCard = document.querySelector('.login-card');
+  if (!loginCard) return;
+
+  // Trigger staggered fade-in
+  requestAnimationFrame(() => {
+    loginCard.classList.add('animate-in');
+  });
+
+  // Typewriter effect
+  typewriterEffect();
+}
+
+// Run login animations on page load
+initLoginAnimations();
