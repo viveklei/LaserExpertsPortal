@@ -15,9 +15,15 @@ const USERS = [
 /* ═══════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════ */
+// Initialize Cloud Firestore database client
+let db = null;
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  db = firebase.firestore();
+}
+
 let state = {
   currentUser: null,
-  apps: JSON.parse(localStorage.getItem('lei_apps')) || [...APPS],
+  apps: [], // loaded dynamically from database/localStorage
   filteredApps: [],
   favourites: JSON.parse(localStorage.getItem('lei_favs') || '[]'),
   activeFilter: 'all',
@@ -219,16 +225,49 @@ togglePwd.addEventListener('click', () => {
 /* ═══════════════════════════════════════════════════
    DASHBOARD INIT
    ═══════════════════════════════════════════════════ */
-function initDashboard() {
-  buildCategoryNav();
-  updateStats();
-  renderApps();
-
-  // Sidebar default: collapsed on small screens, open on large
-  if (window.innerWidth < 1024) {
-    sidebarEl.classList.remove('open');
-    mainContent.classList.add('expanded');
+function loadAppsFromDatabase(callback) {
+  if (!db) {
+    // If Firebase is not configured, load from localStorage or fallback
+    state.apps = JSON.parse(localStorage.getItem('lei_apps')) || [...APPS];
+    if (callback) callback();
+    return;
   }
+
+  // Load from Firestore
+  db.collection('portal').doc('applications').get()
+    .then((doc) => {
+      if (doc.exists && doc.data().list) {
+        state.apps = doc.data().list;
+        console.log("Apps loaded from Cloud Database.");
+      } else {
+        // If Firestore is empty, initialize it with the default APPS list
+        state.apps = [...APPS];
+        db.collection('portal').doc('applications').set({ list: [...APPS] })
+          .then(() => console.log("Initialized database with default apps."))
+          .catch(err => console.error("Error initializing database", err));
+      }
+      if (callback) callback();
+    })
+    .catch((err) => {
+      console.error("Error loading apps from Firestore:", err);
+      // Fallback to localStorage
+      state.apps = JSON.parse(localStorage.getItem('lei_apps')) || [...APPS];
+      if (callback) callback();
+    });
+}
+
+function initDashboard() {
+  loadAppsFromDatabase(() => {
+    buildCategoryNav();
+    updateStats();
+    renderApps();
+
+    // Sidebar default: collapsed on small screens, open on large
+    if (window.innerWidth < 1024) {
+      sidebarEl.classList.remove('open');
+      mainContent.classList.add('expanded');
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════════
@@ -718,13 +757,33 @@ manageForm.addEventListener('submit', e => {
     showToast(`Application "${name}" added successfully.`, 'success', '➕');
   }
 
-  // Save state
-  localStorage.setItem('lei_apps', JSON.stringify(state.apps));
+  // Save state and sync to cloud database
+  syncAppsToDatabase();
   
   closeManageModal();
   buildCategoryNav(); // rebuild category filter counts
   renderApps();
 });
+
+// Helper to sync local state to Firestore
+function syncAppsToDatabase() {
+  // Always save to localStorage as a local backup
+  localStorage.setItem('lei_apps', JSON.stringify(state.apps));
+
+  // Sync to Cloud Firestore if enabled
+  if (db) {
+    db.collection('portal').doc('applications').set({ list: state.apps })
+      .then(() => {
+        showToast("Changes synced to database!", "success", "☁️");
+      })
+      .catch(err => {
+        console.error("Error syncing to Firestore:", err);
+        showToast("Local change saved, but sync to database failed.", "warning", "⚠️");
+      });
+  } else {
+    showToast("Changes saved locally.", "success", "💾");
+  }
+}
 
 // Delete an app
 function deleteApp(id) {
@@ -741,7 +800,8 @@ function deleteApp(id) {
       saveFavs();
     }
 
-    localStorage.setItem('lei_apps', JSON.stringify(state.apps));
+    // Save state and sync to cloud database
+    syncAppsToDatabase();
     showToast(`Application "${app.name}" deleted.`, 'info', '🗑️');
     buildCategoryNav(); // rebuild category filter counts
     renderApps();
