@@ -531,8 +531,13 @@ function openModal(id) {
     launchLink.style.opacity = '1';
     launchLink.style.cursor = 'pointer';
     
+    // Check if it's the Work Report App
+    const isWorkReport = app.name.toLowerCase().includes('report') || 
+                         app.id.toLowerCase().includes('report') ||
+                         app.url.toLowerCase().includes('report');
+    
     // Append SSO params if user is authenticated
-    let launchUrl = app.url;
+    let launchUrl = isWorkReport ? './wrok report deployed/dist/' : app.url;
     if (state.currentUser && launchUrl) {
       try {
         const urlObj = new URL(launchUrl, window.location.origin);
@@ -568,16 +573,22 @@ $('modal-launch-link').addEventListener('click', (e) => {
       return;
     }
 
+    const isWorkReport = state.currentApp.name.toLowerCase().includes('report') || 
+                         state.currentApp.id.toLowerCase().includes('report') ||
+                         state.currentApp.url.toLowerCase().includes('report');
+
+    let targetUrl = isWorkReport ? './wrok report deployed/dist/' : state.currentApp.url;
+
     // Determine if it should launch in the embedded portal iframe
-    const isInternal = state.currentApp.url.startsWith('.') || 
-                       state.currentApp.url.startsWith('/') || 
-                       state.currentApp.url.includes(window.location.host) ||
-                       state.currentApp.id === 'reports';
+    const isInternal = isWorkReport ||
+                       targetUrl.startsWith('.') || 
+                       targetUrl.startsWith('/') || 
+                       targetUrl.includes(window.location.host);
 
     if (isInternal) {
       e.preventDefault();
       showToast(`Launching ${state.currentApp.name} inside Portal…`, 'success', '🚀');
-      launchEmbeddedApp(state.currentApp.name, state.currentApp.url);
+      launchEmbeddedApp(state.currentApp.name, targetUrl);
     } else {
       showToast(`Launching ${state.currentApp.name}…`, 'success', '🚀');
       setTimeout(closeModal, 300);
