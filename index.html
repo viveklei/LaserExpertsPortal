@@ -63,7 +63,79 @@
 
       <!-- Right panel: form -->
       <div class="login-right">
-        <div class="login-card">
+          <!-- Interactive Robot Mascot -->
+          <div id="login-mascot-container" class="login-mascot-container">
+            <svg class="login-mascot" viewBox="0 0 200 160" width="100%" height="150">
+              <defs>
+                <!-- Sleek metallic gradient -->
+                <linearGradient id="robotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                
+                <!-- Glow filter for lasers and eyes -->
+                <filter id="laserGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                
+                <!-- Shadow -->
+                <feDropShadow id="robotShadow" dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.15" />
+              </defs>
+
+              <g filter="url(#robotShadow)">
+                <!-- Neck -->
+                <rect x="85" y="115" width="30" height="20" rx="5" fill="#64748b" />
+                <line x1="90" y1="122" x2="110" y2="122" stroke="#475569" stroke-width="2" />
+                <line x1="90" y1="128" x2="110" y2="128" stroke="#475569" stroke-width="2" />
+
+                <!-- Laser side ear mounts -->
+                <rect x="32" y="70" width="10" height="24" rx="3" fill="#f97316" />
+                <rect x="158" y="70" width="10" height="24" rx="3" fill="#f97316" />
+                
+                <!-- Antenna -->
+                <line x1="100" y1="50" x2="100" y2="25" stroke="#64748b" stroke-width="4" stroke-linecap="round" />
+                <circle cx="100" cy="20" r="8" fill="#f97316" class="antenna-glow" filter="url(#laserGlow)" />
+                
+                <!-- Robot Head -->
+                <rect x="40" y="45" width="120" height="80" rx="22" fill="url(#robotGrad)" stroke="#1e40af" stroke-width="3" />
+                
+                <!-- Faceplate Screen -->
+                <rect x="52" y="57" width="96" height="56" rx="12" fill="#0f172a" stroke="#1e293b" stroke-width="2" />
+                
+                <!-- Eyes Group (moves on input focus/type) -->
+                <g id="mascot-eyes-group" class="mascot-eyes">
+                  <!-- Left Eye -->
+                  <ellipse cx="76" cy="82" rx="10" ry="10" fill="#38bdf8" class="eye-lens" filter="url(#laserGlow)" />
+                  <circle cx="78" cy="80" r="3.5" fill="#ffffff" />
+                  
+                  <!-- Right Eye -->
+                  <ellipse cx="124" cy="82" rx="10" ry="10" fill="#38bdf8" class="eye-lens" filter="url(#laserGlow)" />
+                  <circle cx="126" cy="80" r="3.5" fill="#ffffff" />
+                </g>
+                
+                <!-- Mouth wave line -->
+                <path id="mascot-mouth" d="M 85,102 Q 100,107 115,102" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+                
+                <!-- Arms / Hands (default position represents covering eyes, animated away via CSS) -->
+                <!-- Left Arm/Hand -->
+                <g class="mascot-arm arm-left">
+                  <path d="M 30,150 Q 25,100 74,84" fill="none" stroke="#1e40af" stroke-width="12" stroke-linecap="round" />
+                  <circle cx="74" cy="84" r="10.5" fill="#f97316" />
+                </g>
+                
+                <!-- Right Arm/Hand -->
+                <g class="mascot-arm arm-right">
+                  <path d="M 170,150 Q 175,100 126,84" fill="none" stroke="#1e40af" stroke-width="12" stroke-linecap="round" />
+                  <circle cx="126" cy="84" r="10.5" fill="#f97316" />
+                </g>
+              </g>
+            </svg>
+          </div>
+
           <div class="login-card-header">
             <h2>Welcome Back</h2>
             <p>Sign in to access the portal</p>

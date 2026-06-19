@@ -140,10 +140,25 @@ function doLogin(user) {
   $('dropdown-email').textContent           = user.email;
   document.querySelectorAll('.nav-user-role').forEach(el => el.textContent = user.role);
 
-  // Switch pages
-  loginPage.classList.remove('active');
-  dashPage.classList.add('active');
-  document.body.style.overflow = '';
+  // If login page is active, let the success animation finish first
+  const mascot = $('login-mascot-container');
+  const isLoginPageActive = loginPage.classList.contains('active');
+
+  if (isLoginPageActive && mascot) {
+    mascot.className = 'login-mascot-container happy-success';
+    setTimeout(() => {
+      // Switch pages
+      loginPage.classList.remove('active');
+      dashPage.classList.add('active');
+      document.body.style.overflow = '';
+      mascot.className = 'login-mascot-container'; // reset
+    }, 1000);
+  } else {
+    // Switch pages immediately
+    loginPage.classList.remove('active');
+    dashPage.classList.add('active');
+    document.body.style.overflow = '';
+  }
 
   // Show/Hide Add Application button based on Admin role
   const addAppBtn = $('btn-add-app');
@@ -208,6 +223,11 @@ loginForm.addEventListener('submit', e => {
     if (user) {
       doLogin(user);
     } else {
+      const mascot = $('login-mascot-container');
+      if (mascot) {
+        mascot.classList.add('shake-error');
+        setTimeout(() => mascot.classList.remove('shake-error'), 600);
+      }
       loginErrMsg.textContent = 'Invalid username or password. Please try again.';
       loginError.classList.remove('hidden');
       pwdInput.value = '';
@@ -840,3 +860,45 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
   // Fall back to local session restoration (for manual users and demo mode)
   restoreSession();
 }
+
+/* ═══════════════════════════════════════════════════
+   MASCOT INTERACTION & ANIMATION
+   ═══════════════════════════════════════════════════ */
+function initMascotAnimation() {
+  const mascotContainer = $('login-mascot-container');
+  const mascotEyesGroup = $('mascot-eyes-group');
+  const usernameInput = $('username');
+  const passwordInput = $('password');
+
+  if (!mascotContainer || !mascotEyesGroup || !usernameInput || !passwordInput) return;
+
+  // Track username input focus and typing to shift eyes
+  function updateEyePosition() {
+    const value = usernameInput.value || '';
+    const length = value.length;
+    // Calculate horizontal shift based on input length (max shift of ~6px left/right)
+    const maxChars = 30;
+    const ratio = Math.min(length / maxChars, 1);
+    const xShift = -6 + ratio * 12; // ranges from -6 to +6
+    const yShift = 3; // look down slightly at the text box
+    mascotEyesGroup.style.transform = `translate(${xShift}px, ${yShift}px)`;
+  }
+
+  usernameInput.addEventListener('focus', updateEyePosition);
+  usernameInput.addEventListener('input', updateEyePosition);
+  usernameInput.addEventListener('blur', () => {
+    mascotEyesGroup.style.transform = 'translate(0px, 0px)';
+  });
+
+  // Track password focus to cover eyes
+  passwordInput.addEventListener('focus', () => {
+    mascotContainer.classList.add('hide-eyes');
+  });
+  passwordInput.addEventListener('blur', () => {
+    mascotContainer.classList.remove('hide-eyes');
+  });
+}
+
+// Start mascot animations
+initMascotAnimation();
+
