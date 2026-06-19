@@ -138,6 +138,7 @@ function doLogin(user) {
   $('nav-display-name').textContent         = user.name;
   $('dropdown-display-name').textContent    = user.name;
   $('dropdown-email').textContent           = user.email;
+  document.querySelectorAll('.nav-user-role').forEach(el => el.textContent = user.role);
 
   // Switch pages
   loginPage.classList.remove('active');
