@@ -149,6 +149,12 @@ function doLogout() {
   loginPage.classList.add('active');
   loginForm.reset();
   loginError.classList.add('hidden');
+  
+  // Sign out from Firebase if configured
+  if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    firebase.auth().signOut().catch(err => console.error("Firebase Signout Error", err));
+  }
+
   showToast('You have been signed out.', 'info', '👋');
 }
 
@@ -551,7 +557,34 @@ logoutBtn.addEventListener('click', e => {
   doLogout();
 });
 
-/* ═══════════════════════════════════════════════════
-   BOOT
-   ═══════════════════════════════════════════════════ */
-restoreSession();
+/* ─── Firebase Auth State Observer ─── */
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  firebase.auth().onAuthStateChanged((firebaseUser) => {
+    if (firebaseUser) {
+      // User is signed in via Firebase
+      const user = {
+        username:  firebaseUser.email,
+        name:      firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        email:     firebaseUser.email,
+        picture:   firebaseUser.photoURL,
+        role:      'Google Account',
+        loginType: 'google',
+      };
+      doLogin(user);
+    } else {
+      // If user is currently marked as logged in via google in this session, log out
+      const current = sessionStorage.getItem('lei_user');
+      if (current) {
+        try {
+          const u = JSON.parse(current);
+          if (u.loginType === 'google') {
+            doLogout();
+          }
+        } catch(e) {}
+      }
+    }
+  });
+} else {
+  // Fall back to local session restoration (for manual users and demo mode)
+  restoreSession();
+}

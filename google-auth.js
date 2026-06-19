@@ -43,30 +43,37 @@ function _decodeJWT(token) {
 
 /* ─── Called by Google GSI SDK after user consents ───── */
 window.handleGoogleCredentialResponse = function(response) {
-  const payload = _decodeJWT(response.credential);
-  if (!payload) {
-    showGoogleError('Google sign-in failed. Please try again.');
+  // If Firebase config is not fully set up yet, fall back to simple login
+  if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0 || firebaseConfig.apiKey === "YOUR_API_KEY") {
+    const payload = _decodeJWT(response.credential);
+    if (payload) {
+      const user = {
+        username:  payload.email,
+        name:      payload.name,
+        email:     payload.email,
+        picture:   payload.picture,
+        role:      'Google Account',
+        loginType: 'google',
+      };
+      doLogin(user);
+      showToast(`Welcome, ${user.name}! (Demo Mode)`, 'success', '🎉');
+    } else {
+      showGoogleError('Google sign-in failed. Please try again.');
+    }
     return;
   }
 
-  // Build a user object from the Google profile
-  const user = {
-    username:  payload.email,
-    name:      payload.name,
-    email:     payload.email,
-    picture:   payload.picture,   // Google profile photo URL
-    role:      'Google Account',
-    loginType: 'google',
-  };
-
-  // Optional: restrict to your company domain
-  // if (!payload.email.endsWith('@yourdomain.com')) {
-  //   showGoogleError('Only @yourdomain.com accounts are allowed.');
-  //   return;
-  // }
-
-  doLogin(user);          // defined in main.js
-  showToast(`Welcome, ${user.name}! Signed in with Google.`, 'success', '🎉');
+  // Firebase auth flow
+  const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+  
+  // Show a loading/signing in toast
+  showToast("Authenticating with Firebase...", "info", "🔒");
+  
+  firebase.auth().signInWithCredential(credential)
+    .catch((error) => {
+      console.error("Firebase Sign-In Error", error);
+      showGoogleError('Sign-in failed: ' + error.message);
+    });
 };
 
 /* ─── Show an error on the login card ───────────────── */
