@@ -6,12 +6,12 @@
  */
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBteNVxRR7cMhPtQ8z68zz8y_X-c1umIYY",
+  authDomain: "laser-experts-india-portal.firebaseapp.com",
+  projectId: "laser-experts-india-portal",
+  storageBucket: "laser-experts-india-portal.firebasestorage.app",
+  messagingSenderId: "1014113880303",
+  appId: "1:1014113880303:web:514ee04f7219daa057731a"
 };
 
 // Initialize Firebase
