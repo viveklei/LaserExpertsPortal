@@ -530,7 +530,20 @@ function openModal(id) {
     launchLink.style.pointerEvents = 'auto';
     launchLink.style.opacity = '1';
     launchLink.style.cursor = 'pointer';
-    launchLink.href = app.url;
+    
+    // Append SSO params if user is authenticated
+    let launchUrl = app.url;
+    if (state.currentUser && launchUrl) {
+      try {
+        const urlObj = new URL(launchUrl, window.location.origin);
+        urlObj.searchParams.set('sso_email', state.currentUser.email);
+        urlObj.searchParams.set('sso_name', state.currentUser.name);
+        launchUrl = urlObj.toString();
+      } catch (err) {
+        console.error("Invalid app launch URL:", err);
+      }
+    }
+    launchLink.href = launchUrl;
   }
 
   launchModal.classList.remove('hidden');
