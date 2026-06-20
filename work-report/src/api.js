@@ -117,36 +117,30 @@ function saveLocalDraft(data) {
 // ═══════════════════════════════════════════════════
 
 async function tryFetch(url, options) {
-  // In portal mode, skip network calls entirely
-  if (isPortalMode()) {
-    throw new Error('Portal mode - using local storage');
-  }
   const response = await fetch(url, options);
   return handleResponse(response);
 }
 
 export const api = {
     async ssoLogin(email, name) {
-        // In portal mode, directly return success
-        if (isPortalMode()) {
-          const role = email.includes('admin') ? 'admin' : 'user';
+        try {
+          const response = await fetch(`${API_BASE_URL}/sso-login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, name })
+          });
+          return await handleResponse(response);
+        } catch (err) {
+          console.warn("SSO Login network call failed, falling back to local credentials:", err.message);
+          const role = (email === 'admin@lei.com' || email.includes('admin')) ? 'admin' : 'user';
           return { 
             token: 'portal-sso-token', 
             user: { email, name: name || email.split('@')[0], role } 
           };
         }
-        const response = await fetch(`${API_BASE_URL}/sso-login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, name })
-        });
-        return handleResponse(response);
     },
 
     async login(email, password) {
-        if (isPortalMode()) {
-          throw new Error('Login not available in portal mode');
-        }
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -156,9 +150,6 @@ export const api = {
     },
 
     async register(userData) {
-        if (isPortalMode()) {
-          throw new Error('Register not available in portal mode');
-        }
         const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

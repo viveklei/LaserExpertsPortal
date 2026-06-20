@@ -56,34 +56,56 @@ function App() {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
 
   // Single Sign-On (SSO) integration with Main Portal
-  // Directly authenticate from URL params — NO backend API call needed
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ssoEmail = params.get('sso_email');
     const ssoName = params.get('sso_name');
 
     if (ssoEmail) {
-      // Directly set authenticated state from portal SSO params
-      const role = ssoEmail.includes('admin') ? 'admin' : 'user';
+      const loginSSO = async () => {
+        try {
+          // Attempt server SSO authentication
+          const data = await api.ssoLogin(ssoEmail, ssoName);
+          if (data && data.token) {
+            localStorage.setItem('work_report_token', data.token);
+            localStorage.setItem('is_authenticated', 'true');
+            localStorage.setItem('active_user_email', data.user.email);
+            localStorage.setItem('user_role', data.user.role || 'user');
+            localStorage.removeItem('sso_mode'); // Disable local-only mode
 
-      localStorage.setItem('is_authenticated', 'true');
-      localStorage.setItem('active_user_email', ssoEmail);
-      localStorage.setItem('user_role', role);
-      localStorage.setItem('work_report_token', 'portal-sso-token');
-      localStorage.setItem('sso_mode', 'true');
-      localStorage.setItem('sso_user_name', ssoName || ssoEmail.split('@')[0]);
+            sessionStorage.setItem('is_authenticated', 'true');
+            sessionStorage.setItem('active_user_email', data.user.email);
+            sessionStorage.setItem('user_role', data.user.role || 'user');
 
-      sessionStorage.setItem('is_authenticated', 'true');
-      sessionStorage.setItem('active_user_email', ssoEmail);
-      sessionStorage.setItem('user_role', role);
+            setUserEmail(data.user.email);
+            setUserRole(data.user.role || 'user');
+            setUserName(data.user.name || data.user.email.split('@')[0]);
+            setIsAuthenticated(true);
+          }
+        } catch (err) {
+          console.warn("Server SSO Login failed, falling back to local session:", err);
+          // Fallback to local storage mode
+          const role = ssoEmail.includes('admin') ? 'admin' : 'user';
+          localStorage.setItem('work_report_token', 'portal-sso-token');
+          localStorage.setItem('sso_mode', 'true');
+          localStorage.setItem('is_authenticated', 'true');
+          localStorage.setItem('active_user_email', ssoEmail);
+          localStorage.setItem('user_role', role);
+          localStorage.setItem('sso_user_name', ssoName || ssoEmail.split('@')[0]);
 
-      setUserEmail(ssoEmail);
-      setUserRole(role);
-      setUserName(ssoName || ssoEmail.split('@')[0]);
-      setIsAuthenticated(true);
+          sessionStorage.setItem('is_authenticated', 'true');
+          sessionStorage.setItem('active_user_email', ssoEmail);
+          sessionStorage.setItem('user_role', role);
 
-      // Clean query parameters from URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+          setUserEmail(ssoEmail);
+          setUserRole(role);
+          setUserName(ssoName || ssoEmail.split('@')[0]);
+          setIsAuthenticated(true);
+        }
+        // Clean query parameters from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      };
+      loginSSO();
     }
   }, []);
 
