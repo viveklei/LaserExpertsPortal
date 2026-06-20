@@ -551,6 +551,9 @@ function openModal(id) {
         const urlObj = new URL(launchUrl, window.location.origin);
         urlObj.searchParams.set('sso_email', state.currentUser.email);
         urlObj.searchParams.set('sso_name', state.currentUser.name);
+        if (state.currentUser.picture) {
+          urlObj.searchParams.set('sso_photo', state.currentUser.picture);
+        }
         launchUrl = urlObj.toString();
       } catch (err) {
         console.error("Invalid app launch URL:", err);
@@ -623,6 +626,9 @@ function launchEmbeddedApp(name, url) {
       const urlObj = new URL(targetUrl, window.location.origin);
       urlObj.searchParams.set('sso_email', state.currentUser.email);
       urlObj.searchParams.set('sso_name', state.currentUser.name);
+      if (state.currentUser.picture) {
+        urlObj.searchParams.set('sso_photo', state.currentUser.picture);
+      }
       targetUrl = urlObj.toString();
     } catch (err) {
       console.error("SSO URL construction error:", err);
@@ -923,12 +929,17 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
   firebase.auth().onAuthStateChanged((firebaseUser) => {
     if (firebaseUser) {
       // User is signed in via Firebase
+      const matchingUser = typeof USERS !== 'undefined' ? USERS.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase()) : null;
+      const role = matchingUser ? matchingUser.role : (
+        (firebaseUser.email === 'admin@lei.com' || firebaseUser.email.toLowerCase().includes('admin')) ? 'Portal Administrator' :
+        firebaseUser.email.toLowerCase().includes('manager') ? 'Operations Manager' : 'Staff'
+      );
       const user = {
         username:  firebaseUser.email,
         name:      firebaseUser.displayName || firebaseUser.email.split('@')[0],
         email:     firebaseUser.email,
         picture:   firebaseUser.photoURL,
-        role:      'Google Account',
+        role:      role,
         loginType: 'google',
       };
       doLogin(user);

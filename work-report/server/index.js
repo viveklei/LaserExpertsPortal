@@ -160,6 +160,62 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
+app.post('/api/sso-login', async (req, res) => {
+  const { email, name, photo } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    if (user) {
+      let needsUpdate = false;
+      const params = [];
+      let query = 'UPDATE users SET ';
+      
+      if (!user.photo && photo) {
+        query += 'photo = ?';
+        params.push(photo);
+        user.photo = photo;
+        needsUpdate = true;
+      }
+      if ((!user.name || user.name === email.split('@')[0]) && name) {
+        if (needsUpdate) query += ', ';
+        query += 'name = ?';
+        params.push(name);
+        user.name = name;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        query += ' WHERE email = ?';
+        params.push(email);
+        db.run(query, params);
+      }
+      
+      const token = jwt.sign({ email: user.email, id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ token, user });
+    } else {
+      const defaultRole = (email === 'admin@lei.com' || email.startsWith('admin@') || email.includes('admin')) ? 'admin' : 'user';
+      const randomPassword = Math.random().toString(36).substring(2, 15);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      
+      db.run(
+        `INSERT INTO users (email, password, name, role, photo) VALUES (?, ?, ?, ?, ?)`,
+        [email, hashedPassword, name || email.split('@')[0], defaultRole, photo || null],
+        function(err) {
+          if (err) return res.status(500).json({ error: err.message });
+          
+          db.get(`SELECT * FROM users WHERE id = ?`, [this.lastID], (err, newUser) => {
+            if (err) return res.status(500).json({ error: err.message });
+            const token = jwt.sign({ email: newUser.email, id: newUser.id, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
+            res.json({ token, user: newUser });
+          });
+        }
+      );
+    }
+  });
+});
+
 // Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -453,7 +509,7 @@ app.get('/api/manager/reports', authenticateToken, requireManager, (req, res) =>
 });
 
 // --- SPA Catch-all Route (Keep this at the end) ---
-app.get('/{*path}', (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

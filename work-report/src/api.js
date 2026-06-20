@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5002/api' 
-    : window.location.origin + '/work-report/api');
+    ? 'http://localhost:5003/api' 
+    : 'https://reports.leip.co.in/api');
 
 // Check if we are in portal SSO mode (no backend available)
 const isPortalMode = () => {
@@ -122,12 +122,12 @@ async function tryFetch(url, options) {
 }
 
 export const api = {
-    async ssoLogin(email, name) {
+    async ssoLogin(email, name, photo) {
         try {
           const response = await fetch(`${API_BASE_URL}/sso-login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, name })
+              body: JSON.stringify({ email, name, photo })
           });
           return await handleResponse(response);
         } catch (err) {
@@ -135,7 +135,7 @@ export const api = {
           const role = (email === 'admin@lei.com' || email.includes('admin')) ? 'admin' : 'user';
           return { 
             token: 'portal-sso-token', 
-            user: { email, name: name || email.split('@')[0], role } 
+            user: { email, name: name || email.split('@')[0], role, photo } 
           };
         }
     },

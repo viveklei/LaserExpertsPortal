@@ -63,19 +63,23 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const ssoEmail = params.get('sso_email');
     const ssoName = params.get('sso_name');
+    const ssoPhoto = params.get('sso_photo');
     const showAdmin = params.get('show_admin') === 'true';
 
     if (ssoEmail) {
       const loginSSO = async () => {
         try {
           // Attempt server SSO authentication
-          const data = await api.ssoLogin(ssoEmail, ssoName);
+          const data = await api.ssoLogin(ssoEmail, ssoName, ssoPhoto);
           if (data && data.token) {
             localStorage.setItem('work_report_token', data.token);
             localStorage.setItem('is_authenticated', 'true');
             localStorage.setItem('active_user_email', data.user.email);
             localStorage.setItem('user_role', data.user.role || 'user');
             localStorage.removeItem('sso_mode'); // Disable local-only mode
+            if (data.user.photo) {
+              localStorage.setItem('sso_user_photo', data.user.photo);
+            }
 
             sessionStorage.setItem('is_authenticated', 'true');
             sessionStorage.setItem('active_user_email', data.user.email);
@@ -84,6 +88,7 @@ function App() {
             setUserEmail(data.user.email);
             setUserRole(data.user.role || 'user');
             setUserName(data.user.name || data.user.email.split('@')[0]);
+            if (data.user.photo) setUserPhoto(data.user.photo);
             setIsAuthenticated(true);
             
             if (showAdmin && (data.user.role === 'admin' || data.user.email === 'admin@lei.com')) {
@@ -100,6 +105,9 @@ function App() {
           localStorage.setItem('active_user_email', ssoEmail);
           localStorage.setItem('user_role', role);
           localStorage.setItem('sso_user_name', ssoName || ssoEmail.split('@')[0]);
+          if (ssoPhoto) {
+            localStorage.setItem('sso_user_photo', ssoPhoto);
+          }
 
           sessionStorage.setItem('is_authenticated', 'true');
           sessionStorage.setItem('active_user_email', ssoEmail);
@@ -108,6 +116,7 @@ function App() {
           setUserEmail(ssoEmail);
           setUserRole(role);
           setUserName(ssoName || ssoEmail.split('@')[0]);
+          if (ssoPhoto) setUserPhoto(ssoPhoto);
           setIsAuthenticated(true);
 
           if (showAdmin && role === 'admin') {

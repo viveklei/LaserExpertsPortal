@@ -47,16 +47,23 @@ window.handleGoogleCredentialResponse = function (response) {
   if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0 || firebaseConfig.apiKey === "YOUR_API_KEY") {
     const payload = _decodeJWT(response.credential);
     if (payload) {
+      // Match with known users or determine based on email
+      const matchingUser = typeof USERS !== 'undefined' ? USERS.find(u => u.email.toLowerCase() === payload.email.toLowerCase()) : null;
+      const role = matchingUser ? matchingUser.role : (
+        (payload.email === 'admin@lei.com' || payload.email.toLowerCase().includes('admin')) ? 'Portal Administrator' :
+        payload.email.toLowerCase().includes('manager') ? 'Operations Manager' : 'Staff'
+      );
+      
       const user = {
         username: payload.email,
         name: payload.name,
         email: payload.email,
         picture: payload.picture,
-        role: 'Google Account',
+        role: role,
         loginType: 'google',
       };
       doLogin(user);
-      showToast(`Welcome, ${user.name}! (Demo Mode)`, 'success', '🎉');
+      showToast(`Welcome, ${user.name}! (${role})`, 'success', '🎉');
     } else {
       showGoogleError('Google sign-in failed. Please try again.');
     }
