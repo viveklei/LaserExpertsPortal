@@ -6,6 +6,16 @@
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LEI Report - Professional Work Report Generator</title>
+  <script>
+    // Force unregister old service workers to resolve 404 cache issues
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      }).catch(err => console.warn('SW unregister failed:', err));
+    }
+  </script>
 </head>
 
 <body>
