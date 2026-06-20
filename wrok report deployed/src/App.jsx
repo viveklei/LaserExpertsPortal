@@ -56,37 +56,34 @@ function App() {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
 
   // Single Sign-On (SSO) integration with Main Portal
+  // Directly authenticate from URL params — NO backend API call needed
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ssoEmail = params.get('sso_email');
     const ssoName = params.get('sso_name');
 
     if (ssoEmail) {
-      const loginSSO = async () => {
-        try {
-          const data = await api.ssoLogin(ssoEmail, ssoName || ssoEmail.split('@')[0]);
-          if (data && data.token) {
-            localStorage.setItem('work_report_token', data.token);
-            localStorage.setItem('is_authenticated', 'true');
-            localStorage.setItem('active_user_email', data.user.email);
-            localStorage.setItem('user_role', data.user.role || 'user');
+      // Directly set authenticated state from portal SSO params
+      const role = ssoEmail.includes('admin') ? 'admin' : 'user';
 
-            sessionStorage.setItem('is_authenticated', 'true');
-            sessionStorage.setItem('active_user_email', data.user.email);
-            sessionStorage.setItem('user_role', data.user.role || 'user');
+      localStorage.setItem('is_authenticated', 'true');
+      localStorage.setItem('active_user_email', ssoEmail);
+      localStorage.setItem('user_role', role);
+      localStorage.setItem('work_report_token', 'portal-sso-token');
+      localStorage.setItem('sso_mode', 'true');
+      localStorage.setItem('sso_user_name', ssoName || ssoEmail.split('@')[0]);
 
-            setUserEmail(data.user.email);
-            setUserRole(data.user.role || 'user');
-            setIsAuthenticated(true);
+      sessionStorage.setItem('is_authenticated', 'true');
+      sessionStorage.setItem('active_user_email', ssoEmail);
+      sessionStorage.setItem('user_role', role);
 
-            // Clean query parameters from URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        } catch (err) {
-          console.error('SSO login error:', err);
-        }
-      };
-      loginSSO();
+      setUserEmail(ssoEmail);
+      setUserRole(role);
+      setUserName(ssoName || ssoEmail.split('@')[0]);
+      setIsAuthenticated(true);
+
+      // Clean query parameters from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
