@@ -25,8 +25,18 @@ const initDB = () => {
       reporting_person TEXT,
       photo TEXT,
       role TEXT DEFAULT 'user',
+      managed_departments TEXT, -- JSON string of department names for managers
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Migration: Add managed_departments if it doesn't exist
+    db.all("PRAGMA table_info(users)", (err, columns) => {
+      if (err) return;
+      const hasManagedDept = columns.some(col => col.name === 'managed_departments');
+      if (!hasManagedDept) {
+        db.run("ALTER TABLE users ADD COLUMN managed_departments TEXT");
+      }
+    });
 
     // Reports table
     db.run(`CREATE TABLE IF NOT EXISTS reports (
@@ -47,7 +57,7 @@ const initDB = () => {
     db.run(`CREATE TABLE IF NOT EXISTS settings (
       user_email TEXT PRIMARY KEY,
       theme TEXT DEFAULT 'dark',
-      use_ai BOOLEAN DEFAULT 1,
+      use_ai BOOLEAN DEFAULT 0,
       report_tone TEXT DEFAULT 'Standard',
       recipient_email TEXT,
       smart_memo TEXT,

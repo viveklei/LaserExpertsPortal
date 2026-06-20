@@ -23,6 +23,18 @@ import rateLimit from 'express-rate-limit';
 
 const app = express();
 
+// --- SHARED UTILITIES ---
+const safeParse = (str, fallback = []) => {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    console.error('JSON Parse Error:', e.message, 'Input:', str);
+    return fallback;
+  }
+};
+
+
 // --- EARLY HEALTH CHECK (Before anything else) ---
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -34,19 +46,24 @@ app.get('/api/health', (req, res) => {
 });
 
 console.log('Express app instance created');
-const PORT = process.env.PORT || 5001; 
+const PORT = process.env.PORT || 5003; 
 const JWT_SECRET = process.env.JWT_SECRET || 'lei-report-portal-secret-key-2026';
 
 console.log(`Final PORT to be used: ${PORT}`);
 
+
+
 // CORS configuration - allow production frontend and localhost for dev
 const allowedOrigins = [
+  'https://reports.leip.co.in',
+  'http://reports.leip.co.in',
   'https://report.leip.co.in',
   'http://report.leip.co.in',
   'http://localhost:5173',
   'http://localhost:4173',
   'http://127.0.0.1:5173'
 ];
+
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -61,10 +78,15 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '200mb' }));
 
+// Serve static files from React build
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+
 // Rate limiting
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000, // Increased to 1000 to be extremely safe
+  max: 5000, // Increased to 5000 to be extremely safe
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -118,36 +140,6 @@ app.post('/api/register', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Server error during registration' });
   }
-app.post('/api/sso-login', async (req, res) => {
-  const { email, name } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
-
-  db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
-    if (err) return res.status(500).json({ error: err.message });
-    
-    if (user) {
-      const token = jwt.sign({ email: user.email, id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-      return res.json({ token, user });
-    } else {
-      const defaultRole = (email === 'admin@lei.com' || email.startsWith('admin@')) ? 'admin' : 'user';
-      const randomPassword = Math.random().toString(36).substring(2, 15);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      
-      db.run(
-        `INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)`,
-        [email, hashedPassword, name || email.split('@')[0], defaultRole],
-        function(err) {
-          if (err) return res.status(500).json({ error: err.message });
-          
-          db.get(`SELECT * FROM users WHERE id = ?`, [this.lastID], (err, newUser) => {
-            if (err) return res.status(500).json({ error: err.message });
-            const token = jwt.sign({ email: newUser.email, id: newUser.id, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
-            res.json({ token, user: newUser });
-          });
-        }
-      );
-    }
-  });
 });
 
 app.post('/api/login', async (req, res) => {
@@ -200,6 +192,23 @@ const requireAdmin = (req, res, next) => {
   });
 };
 
+// Middleware to verify Manager or Admin role
+const requireManager = (req, res, next) => {
+  if (!req.user || !req.user.email) return res.status(401).json({ error: 'Unauthorized' });
+
+  db.get(`SELECT role, managed_departments FROM users WHERE email = ?`, [req.user.email], (err, user) => {
+    if (err) return res.status(500).json({ error: 'Database error checking role' });
+    
+    if (user && (String(user.role).toLowerCase() === 'manager' || String(user.role).toLowerCase() === 'admin')) {
+      req.user.managed_departments = safeParse(user.managed_departments, []);
+      next();
+    } else {
+
+      res.status(403).json({ error: 'Manager access required' });
+    }
+  });
+};
+
 // --- Profile & Settings Routes ---
 
 app.get('/api/profile', authenticateToken, (req, res) => {
@@ -235,7 +244,8 @@ app.post('/api/settings', authenticateToken, (req, res) => {
      VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_email) DO UPDATE SET 
      theme=excluded.theme, use_ai=excluded.use_ai, report_tone=excluded.report_tone, recipient_email=excluded.recipient_email, smart_memo=excluded.smart_memo`,
-    [req.user.email, theme, use_ai, report_tone, recipient_email, JSON.stringify(smart_memo)],
+    [req.user.email, theme, use_ai, report_tone, recipient_email, JSON.stringify(smart_memo || {})],
+
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: 'Settings updated successfully' });
@@ -249,10 +259,11 @@ app.get('/api/draft', authenticateToken, (req, res) => {
   db.get(`SELECT tasks_data, start_time, end_time FROM reports WHERE user_email = ? AND category = 'DRAFT' LIMIT 1`, [req.user.email], (err, draft) => {
     if (err) return res.status(500).json({ error: err.message });
     if (draft) {
-      draft.tasks_data = JSON.parse(draft.tasks_data);
+      draft.tasks_data = safeParse(draft.tasks_data, []);
     }
     res.json(draft || { tasks_data: [] });
   });
+
 });
 
 app.post('/api/draft', authenticateToken, (req, res) => {
@@ -276,9 +287,10 @@ app.get('/api/reports', authenticateToken, (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(reports.map(r => ({
       ...r,
-      tasks_data: JSON.parse(r.tasks_data || '[]'),
-      selected_logos: JSON.parse(r.selected_logos || '[]')
+      tasks_data: safeParse(r.tasks_data, []),
+      selected_logos: safeParse(r.selected_logos, [])
     })));
+
   });
 });
 
@@ -295,7 +307,8 @@ app.post('/api/reports', authenticateToken, (req, res) => {
       // Insert the latest version
       db.run(
         `INSERT INTO reports (user_email, report_date, category, tasks_data, expanded_data, selected_logos, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.user.email, report_date, category, JSON.stringify(tasks_data), JSON.stringify(expanded_data || []), JSON.stringify(selected_logos), start_time, end_time],
+        [req.user.email, report_date, category, JSON.stringify(tasks_data || []), JSON.stringify(expanded_data || []), JSON.stringify(selected_logos || []), start_time, end_time],
+
         function(err) {
           if (err) return res.status(500).json({ error: err.message });
           res.status(201).json({ message: 'Report saved successfully', reportId: this.lastID });
@@ -309,10 +322,11 @@ app.post('/api/reports', authenticateToken, (req, res) => {
 
 app.get('/api/admin/users', authenticateToken, requireAdmin, (req, res) => {
   console.log('Fetching all users for admin');
-  db.all(`SELECT id, email, name, department, designation, reporting_person, role, created_at FROM users`, [], (err, users) => {
+  db.all(`SELECT id, email, name, department, designation, reporting_person, role, managed_departments, created_at FROM users`, [], (err, users) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(users);
+    res.json(users.map(u => ({ ...u, managed_departments: safeParse(u.managed_departments, []) })));
   });
+
 });
 
 app.get('/api/admin/all-reports', authenticateToken, requireAdmin, (req, res) => {
@@ -320,10 +334,11 @@ app.get('/api/admin/all-reports', authenticateToken, requireAdmin, (req, res) =>
     if (err) return res.status(500).json({ error: err.message });
     res.json(reports.map(r => ({
       ...r,
-      tasks_data: JSON.parse(r.tasks_data || '[]'),
-      expanded_data: JSON.parse(r.expanded_data || '[]'),
-      selected_logos: JSON.parse(r.selected_logos || '[]')
+      tasks_data: safeParse(r.tasks_data, []),
+      expanded_data: safeParse(r.expanded_data, []),
+      selected_logos: safeParse(r.selected_logos, [])
     })));
+
   });
 });
 
@@ -332,23 +347,118 @@ app.get('/api/admin/user-reports/:email', authenticateToken, requireAdmin, (req,
     if (err) return res.status(500).json({ error: err.message });
     res.json(reports.map(r => ({
       ...r,
-      tasks_data: JSON.parse(r.tasks_data || '[]'),
-      selected_logos: JSON.parse(r.selected_logos || '[]')
+      tasks_data: safeParse(r.tasks_data, []),
+      selected_logos: safeParse(r.selected_logos, [])
     })));
+
   });
 });
 
 app.post('/api/admin/update-user', authenticateToken, requireAdmin, (req, res) => {
-  const { email, role } = req.body;
-  if (!email || !role) return res.status(400).json({ error: 'Email and role are required' });
+  const { email, role, name, department, designation, reporting_person } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
   
-  db.run(`UPDATE users SET role = ? WHERE email = ?`, [role, email], function(err) {
+  const updates = [];
+  const params = [];
+  
+  if (role) { updates.push('role = ?'); params.push(String(role).toLowerCase()); }
+  if (name) { updates.push('name = ?'); params.push(name); }
+  if (department) { updates.push('department = ?'); params.push(department); }
+  if (designation) { updates.push('designation = ?'); params.push(designation); }
+  if (reporting_person) { updates.push('reporting_person = ?'); params.push(reporting_person); }
+  if (req.body.managed_departments) { 
+    updates.push('managed_departments = ?'); 
+    params.push(JSON.stringify(req.body.managed_departments)); 
+  }
+  
+  if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
+  
+  params.push(email);
+  db.run(`UPDATE users SET ${updates.join(', ')} WHERE email = ?`, params, function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: 'User updated successfully' });
   });
 });
 
+app.post('/api/admin/delete-user', authenticateToken, requireAdmin, (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (email === 'admin@lei.com') return res.status(403).json({ error: 'Cannot delete master admin' });
+
+  db.run(`DELETE FROM users WHERE email = ?`, [email], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    // Cleanup associated data
+    db.run(`DELETE FROM reports WHERE user_email = ?`, [email]);
+    db.run(`DELETE FROM settings WHERE user_email = ?`, [email]);
+    
+    res.json({ message: 'User and associated records deleted permanently' });
+  });
+});
+
+app.post('/api/admin/reset-password', authenticateToken, requireAdmin, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const tempPassword = 'lei' + Math.floor(1000 + Math.random() * 9000);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    
+    db.run(`UPDATE users SET password = ? WHERE email = ?`, [hashedPassword, email], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ 
+        message: `Key reset successful. New temporary key: ${tempPassword}`,
+        tempPassword 
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error during key reset' });
+  }
+});
+
+// --- Manager Routes ---
+
+app.get('/api/manager/workforce', authenticateToken, requireManager, (req, res) => {
+  const depts = req.user.managed_departments;
+  if (!depts || depts.length === 0) return res.json([]);
+
+  const placeholders = depts.map(() => '?').join(',');
+  db.all(`SELECT id, email, name, department, designation, reporting_person, role, created_at FROM users WHERE department IN (${placeholders})`, depts, (err, users) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(users);
+  });
+});
+
+app.get('/api/manager/reports', authenticateToken, requireManager, (req, res) => {
+  const depts = req.user.managed_departments;
+  if (!depts || depts.length === 0) return res.json([]);
+
+  const placeholders = depts.map(() => '?').join(',');
+  db.all(`
+    SELECT reports.*, users.name as user_name 
+    FROM reports 
+    JOIN users ON reports.user_email = users.email 
+    WHERE users.department IN (${placeholders}) AND reports.category != 'DRAFT' 
+    ORDER BY reports.report_date DESC
+  `, depts, (err, reports) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(reports.map(r => ({
+      ...r,
+      tasks_data: safeParse(r.tasks_data, []),
+      expanded_data: safeParse(r.expanded_data, []),
+      selected_logos: safeParse(r.selected_logos, [])
+    })));
+
+  });
+});
+
+// --- SPA Catch-all Route (Keep this at the end) ---
+app.get('/{*path}', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
+
   console.log(`Server is running!`);
   console.log(`- Local: http://localhost:${PORT}`);
   console.log(`- API Base: /api`);
