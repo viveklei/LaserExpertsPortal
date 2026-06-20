@@ -509,7 +509,7 @@ app.get('/api/manager/reports', authenticateToken, requireManager, (req, res) =>
 });
 
 // --- SPA Catch-all Route (Keep this at the end) ---
-app.get('/*', (req, res) => {
+app.get('/(.*)', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
