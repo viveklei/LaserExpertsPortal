@@ -373,7 +373,7 @@ export const generateExpandedReport = (input, designation = 'General', tone = 'S
         } else {
             timestamp = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         }
-        
+
         lowerLine = trimmedLine.toLowerCase();
 
         // 2. Identify category via keywords
