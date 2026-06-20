@@ -164,14 +164,15 @@ function doLogin(user) {
     document.body.style.overflow = '';
   }
 
-  // Show/Hide Add Application button based on Admin role
+  // Show/Hide Add Application button & Admin sidebar section based on Admin role
   const addAppBtn = $('btn-add-app');
-  if (addAppBtn) {
-    if (user.role === 'Portal Administrator') {
-      addAppBtn.classList.remove('hidden');
-    } else {
-      addAppBtn.classList.add('hidden');
-    }
+  const adminSection = $('admin-sidebar-section');
+  if (user.role === 'Portal Administrator') {
+    if (addAppBtn) addAppBtn.classList.remove('hidden');
+    if (adminSection) adminSection.classList.remove('hidden');
+  } else {
+    if (addAppBtn) addAppBtn.classList.add('hidden');
+    if (adminSection) adminSection.classList.add('hidden');
   }
 
   // Init dashboard
@@ -190,6 +191,9 @@ function doLogout() {
   if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
     firebase.auth().signOut().catch(err => console.error("Firebase Signout Error", err));
   }
+
+  const adminSection = $('admin-sidebar-section');
+  if (adminSection) adminSection.classList.add('hidden');
 
   showToast('You have been signed out.', 'info', '👋');
 }
@@ -635,6 +639,13 @@ $('btn-back-to-portal').addEventListener('click', () => {
   $('embedded-app-page').classList.remove('active');
   $('embedded-app-iframe').src = '';
   dashPage.classList.add('active');
+});
+
+// Work Report Admin dashboard launcher
+$('btn-admin-work-report').addEventListener('click', (e) => {
+  e.preventDefault();
+  showToast(`Launching Work Report Admin Dashboard…`, 'success', '🚀');
+  launchEmbeddedApp("Work Report Admin", "./work-report/dist/");
 });
 
 /* ═══════════════════════════════════════════════════
