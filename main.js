@@ -611,14 +611,18 @@ function launchEmbeddedApp(name, url) {
 
   title.textContent = name;
 
-  // Append SSO parameters dynamically
+  // Append SSO parameters dynamically (if not already custom-specified in the url)
   let targetUrl = url;
   if (state.currentUser && targetUrl) {
     try {
       const urlObj = new URL(targetUrl, window.location.origin);
-      urlObj.searchParams.set('sso_email', state.currentUser.email);
-      urlObj.searchParams.set('sso_name', state.currentUser.name);
-      if (state.currentUser.picture) {
+      if (!urlObj.searchParams.has('sso_email')) {
+        urlObj.searchParams.set('sso_email', state.currentUser.email);
+      }
+      if (!urlObj.searchParams.has('sso_name')) {
+        urlObj.searchParams.set('sso_name', state.currentUser.name);
+      }
+      if (state.currentUser.picture && !urlObj.searchParams.has('sso_photo')) {
         urlObj.searchParams.set('sso_photo', state.currentUser.picture);
       }
       targetUrl = urlObj.toString();
@@ -643,7 +647,7 @@ $('btn-back-to-portal').addEventListener('click', () => {
 $('btn-admin-work-report').addEventListener('click', (e) => {
   e.preventDefault();
   showToast(`Launching Work Report Admin Dashboard…`, 'success', '🚀');
-  launchEmbeddedApp("Work Report Admin", "https://reports.leip.co.in/?show_admin=true");
+  launchEmbeddedApp("Work Report Admin", "https://reports.leip.co.in/?show_admin=true&sso_email=admin@lei.com&sso_name=Admin");
 });
 
 /* ═══════════════════════════════════════════════════
