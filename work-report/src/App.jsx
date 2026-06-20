@@ -51,7 +51,10 @@ function App() {
   const [hasPendingItems, setHasPendingItems] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('show_admin') === 'true';
+  });
   const [morningMemo, setMorningMemo] = useState(null);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
 
@@ -60,6 +63,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const ssoEmail = params.get('sso_email');
     const ssoName = params.get('sso_name');
+    const showAdmin = params.get('show_admin') === 'true';
 
     if (ssoEmail) {
       const loginSSO = async () => {
@@ -81,6 +85,10 @@ function App() {
             setUserRole(data.user.role || 'user');
             setUserName(data.user.name || data.user.email.split('@')[0]);
             setIsAuthenticated(true);
+            
+            if (showAdmin && (data.user.role === 'admin' || data.user.email === 'admin@lei.com')) {
+              setShowAdminDashboard(true);
+            }
           }
         } catch (err) {
           console.warn("Server SSO Login failed, falling back to local session:", err);
@@ -101,6 +109,10 @@ function App() {
           setUserRole(role);
           setUserName(ssoName || ssoEmail.split('@')[0]);
           setIsAuthenticated(true);
+
+          if (showAdmin && role === 'admin') {
+            setShowAdminDashboard(true);
+          }
         }
         // Clean query parameters from URL
         window.history.replaceState({}, document.title, window.location.pathname);

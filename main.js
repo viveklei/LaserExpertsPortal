@@ -645,7 +645,7 @@ $('btn-back-to-portal').addEventListener('click', () => {
 $('btn-admin-work-report').addEventListener('click', (e) => {
   e.preventDefault();
   showToast(`Launching Work Report Admin Dashboard…`, 'success', '🚀');
-  launchEmbeddedApp("Work Report Admin", "./work-report/dist/");
+  launchEmbeddedApp("Work Report Admin", "./work-report/dist/?show_admin=true");
 });
 
 /* ═══════════════════════════════════════════════════
