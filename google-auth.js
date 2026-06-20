@@ -43,30 +43,61 @@ function _decodeJWT(token) {
 
 /* ─── Called by Google GSI SDK after user consents ───── */
 window.handleGoogleCredentialResponse = function (response) {
+  const payload = _decodeJWT(response.credential);
+  if (!payload || !payload.email) {
+    showGoogleError('Google sign-in failed. Invalid payload.');
+    return;
+  }
+
+  const emailLower = payload.email.toLowerCase();
+  const admins = ['admin@lei.com', 'admin@laserexperts.in', 'pd@laserxprts.com'];
+  const managers = ['marketing01@laserxprts.com', 'harisha.prabakaran@laserxprts.com', 'operations@laserxprts.com'];
+  const role = (admins.includes(emailLower) || emailLower.startsWith('admin@') || emailLower.includes('admin')) ? 'Portal Administrator' :
+               (managers.includes(emailLower) || emailLower.includes('manager')) ? 'Operations Manager' : 'Staff';
+
+  const user = {
+    username: payload.email,
+    name: payload.name,
+    email: payload.email,
+    picture: payload.picture,
+    role: role,
+    loginType: 'google',
+  };
+
+  const backendSsoUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5003/api/sso-login' 
+    : window.location.origin + '/work-report/api/sso-login';
+
+  const syncPromise = fetch(backendSsoUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: payload.email, name: payload.name, photo: payload.picture })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Registered/synced Google user with VPS SQLite database successfully:", data);
+    if (data && data.token && data.user) {
+      localStorage.setItem('work_report_token', data.token);
+      localStorage.removeItem('sso_mode');
+      
+      user.name = data.user.name || user.name;
+      user.picture = data.user.photo || user.picture;
+      user.role = (data.user.role === 'admin' || data.user.email === 'admin@lei.com') ? 'Portal Administrator' :
+                  (data.user.role === 'manager') ? 'Operations Manager' : 'Staff';
+    }
+    return user;
+  })
+  .catch(err => {
+    console.warn("Could not sync Google user profile with VPS SQLite database:", err.message);
+    return user;
+  });
+
   // If Firebase config is not fully set up yet, fall back to simple login
   if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0 || firebaseConfig.apiKey === "YOUR_API_KEY") {
-    const payload = _decodeJWT(response.credential);
-    if (payload) {
-      const emailLower = payload.email.toLowerCase();
-      const admins = ['admin@lei.com', 'admin@laserexperts.in', 'pd@laserxprts.com'];
-      const managers = ['marketing01@laserxprts.com', 'harisha.prabakaran@laserxprts.com', 'operations@laserxprts.com'];
-      
-      const role = (admins.includes(emailLower) || emailLower.startsWith('admin@') || emailLower.includes('admin')) ? 'Portal Administrator' :
-                   (managers.includes(emailLower) || emailLower.includes('manager')) ? 'Operations Manager' : 'Staff';
-      
-      const user = {
-        username: payload.email,
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        role: role,
-        loginType: 'google',
-      };
-      doLogin(user);
-      showToast(`Welcome, ${user.name}! (${role})`, 'success', '🎉');
-    } else {
-      showGoogleError('Google sign-in failed. Please try again.');
-    }
+    syncPromise.then(finalUser => {
+      doLogin(finalUser);
+      showToast(`Welcome, ${finalUser.name}! (${finalUser.role})`, 'success', '🎉');
+    });
     return;
   }
 

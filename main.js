@@ -21,6 +21,10 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
   db = firebase.firestore();
 }
 
+const PORTAL_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:5003/api' 
+  : window.location.origin + '/work-report/api';
+
 let state = {
   currentUser: null,
   apps: [], // loaded dynamically from database/localStorage
@@ -255,31 +259,19 @@ togglePwd.addEventListener('click', () => {
    DASHBOARD INIT
    ═══════════════════════════════════════════════════ */
 function loadAppsFromDatabase(callback) {
-  if (!db) {
-    // If Firebase is not configured, load from localStorage or fallback
-    state.apps = JSON.parse(localStorage.getItem('lei_apps')) || [...APPS];
-    if (callback) callback();
-    return;
-  }
-
-  // Load from Firestore
-  db.collection('portal').doc('applications').get()
-    .then((doc) => {
-      if (doc.exists && doc.data().list) {
-        state.apps = doc.data().list;
-        console.log("Apps loaded from Cloud Database.");
+  fetch(`${PORTAL_API_BASE}/portal/apps`)
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        state.apps = data;
+        console.log("Apps loaded from VPS SQLite database.");
       } else {
-        // If Firestore is empty, initialize it with the default APPS list
-        state.apps = [...APPS];
-        db.collection('portal').doc('applications').set({ list: [...APPS] })
-          .then(() => console.log("Initialized database with default apps."))
-          .catch(err => console.error("Error initializing database", err));
+        state.apps = JSON.parse(localStorage.getItem('lei_apps')) || [...APPS];
       }
       if (callback) callback();
     })
-    .catch((err) => {
-      console.error("Error loading apps from Firestore:", err);
-      // Fallback to localStorage
+    .catch(err => {
+      console.warn("Error loading apps from backend, falling back to local:", err);
       state.apps = JSON.parse(localStorage.getItem('lei_apps')) || [...APPS];
       if (callback) callback();
     });
@@ -545,7 +537,7 @@ function openModal(id) {
                          app.url.toLowerCase().includes('report');
     
     // Append SSO params if user is authenticated
-    let launchUrl = isWorkReport ? './work-report/dist/index.html' : app.url;
+    let launchUrl = app.url;
     if (state.currentUser && launchUrl) {
       try {
         const urlObj = new URL(launchUrl, window.location.origin);
@@ -588,7 +580,7 @@ $('modal-launch-link').addEventListener('click', (e) => {
                          state.currentApp.id.toLowerCase().includes('report') ||
                          state.currentApp.url.toLowerCase().includes('report');
 
-    let targetUrl = isWorkReport ? './work-report/dist/index.html' : state.currentApp.url;
+    let targetUrl = state.currentApp.url;
 
     // Determine if it should launch in the embedded portal iframe
     const isInternal = isWorkReport ||
@@ -651,7 +643,7 @@ $('btn-back-to-portal').addEventListener('click', () => {
 $('btn-admin-work-report').addEventListener('click', (e) => {
   e.preventDefault();
   showToast(`Launching Work Report Admin Dashboard…`, 'success', '🚀');
-  launchEmbeddedApp("Work Report Admin", "./work-report/dist/?show_admin=true");
+  launchEmbeddedApp("Work Report Admin", "https://reports.leip.co.in/?show_admin=true");
 });
 
 /* ═══════════════════════════════════════════════════
@@ -881,24 +873,27 @@ manageForm.addEventListener('submit', e => {
   renderApps();
 });
 
-// Helper to sync local state to Firestore
+// Helper to sync local state to SQLite
 function syncAppsToDatabase() {
   // Always save to localStorage as a local backup
   localStorage.setItem('lei_apps', JSON.stringify(state.apps));
 
-  // Sync to Cloud Firestore if enabled
-  if (db) {
-    db.collection('portal').doc('applications').set({ list: state.apps })
-      .then(() => {
-        showToast("Changes synced to database!", "success", "☁️");
-      })
-      .catch(err => {
-        console.error("Error syncing to Firestore:", err);
-        showToast("Local change saved, but sync to database failed.", "warning", "⚠️");
-      });
-  } else {
-    showToast("Changes saved locally.", "success", "💾");
-  }
+  fetch(`${PORTAL_API_BASE}/portal/apps`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apps: state.apps })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Sync failed");
+    return res.json();
+  })
+  .then(data => {
+    showToast("Changes synced to database!", "success", "☁️");
+  })
+  .catch(err => {
+    console.error("Error syncing apps to database:", err);
+    showToast("Local change saved, but sync to database failed.", "warning", "⚠️");
+  });
 }
 
 // Delete an app
@@ -943,7 +938,58 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
         role:      role,
         loginType: 'google',
       };
-      doLogin(user);
+      
+      // Option 2: Save/Sync the logged-in Google user to Firestore (and also SQLite backend)
+      if (db) {
+        db.collection('users').doc(firebaseUser.email.toLowerCase()).set({
+          email: firebaseUser.email,
+          name: user.name,
+          picture: user.picture,
+          role: user.role,
+          loginType: 'google',
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true })
+        .then(() => console.log("Google user profile synchronized with Firestore."))
+        .catch(err => console.error("Firestore user sync failed:", err));
+      }
+
+      // Sync Google profile with VPS SQLite database
+      const backendSsoUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5003/api/sso-login' 
+        : window.location.origin + '/work-report/api/sso-login';
+
+      fetch(backendSsoUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: firebaseUser.email, name: user.name, photo: user.picture })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Registered/synced Google user with VPS SQLite database successfully:", data);
+        if (data && data.token && data.user) {
+          localStorage.setItem('work_report_token', data.token);
+          localStorage.removeItem('sso_mode');
+          
+          const dbRole = (data.user.role === 'admin' || data.user.email === 'admin@lei.com') ? 'Portal Administrator' :
+                         (data.user.role === 'manager') ? 'Operations Manager' : 'Staff';
+          
+          const updatedUser = {
+            username:  data.user.email,
+            name:      data.user.name || user.name,
+            email:     data.user.email,
+            picture:   data.user.photo || user.picture,
+            role:      dbRole,
+            loginType: 'google',
+          };
+          doLogin(updatedUser);
+        } else {
+          doLogin(user);
+        }
+      })
+      .catch(err => {
+        console.warn("Could not sync Google user profile with VPS SQLite database, using fallback:", err.message);
+        doLogin(user);
+      });
     } else {
       // If user is currently marked as logged in via google in this session, log out
       const current = sessionStorage.getItem('lei_user');
@@ -1082,3 +1128,86 @@ function initLoginAnimations() {
 
 // Run login animations on page load
 initLoginAnimations();
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE PROFILES MODAL INTERACTION
+   ═══════════════════════════════════════════════════ */
+function initGoogleUsersModal() {
+  const btnGoogleUsers = $('btn-admin-google-users');
+  const modal = $('google-users-modal');
+  const loader = $('google-users-loader');
+  const container = $('google-users-list-container');
+  const tableBody = $('google-users-table-body');
+  const closeBtn1 = $('google-users-modal-close');
+  const closeBtn2 = $('google-users-modal-close-btn');
+
+  if (!btnGoogleUsers || !modal) return;
+
+  function showModal() {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Reset views
+    loader.classList.remove('hidden');
+    container.classList.add('hidden');
+    tableBody.innerHTML = '';
+
+    if (!db) {
+      loader.innerHTML = '<span style="color:#ef4444;">⚠️ Cloud Firestore database client not configured/initialized.</span>';
+      return;
+    }
+
+    fetch(`${PORTAL_API_BASE}/portal/google-users`)
+      .then(res => {
+        if (!res.ok) throw new Error("Database query failed");
+        return res.json();
+      })
+      .then((usersList) => {
+        loader.classList.add('hidden');
+        container.classList.remove('hidden');
+
+        if (usersList.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;">No Google profiles found.</td></tr>';
+          return;
+        }
+
+        let html = '';
+        usersList.forEach((u) => {
+          const avatarHtml = u.photo 
+            ? `<img src="${u.photo}" alt="${u.name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />`
+            : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8rem; color: #fff;">${getInitials(u.name || u.email)}</div>`;
+          
+          html += `
+            <tr style="border-bottom: 1.5px solid #1e293b; transition: background 0.2s;">
+              <td style="padding: 12px 8px;">${avatarHtml}</td>
+              <td style="padding: 12px 8px; font-weight: 500;">${u.name || ''}</td>
+              <td style="padding: 12px 8px; font-family: monospace;">${u.email || ''}</td>
+              <td style="padding: 12px 8px;"><span style="background: #1e293b; color: #38bdf8; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">${u.role || 'Staff'}</span></td>
+            </tr>
+          `;
+        });
+        tableBody.innerHTML = html;
+      })
+      .catch((err) => {
+        console.error("Error fetching Google users:", err);
+        loader.innerHTML = `<span style="color:#ef4444;">⚠️ Error fetching profiles: ${err.message}</span>`;
+      });
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  btnGoogleUsers.addEventListener('click', (e) => {
+    e.preventDefault();
+    showModal();
+  });
+
+  closeBtn1.addEventListener('click', closeModal);
+  closeBtn2.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+}
+
+// Initialize modal listener
+initGoogleUsersModal();

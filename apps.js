@@ -89,7 +89,7 @@ const APPS = [
     id: "reports",
     name: "Work Report App",
     desc: "Generate professional daily, weekly, and monthly work reports for Laser Expert India.",
-    url: "./work-report/dist/index.html",
+    url: "https://reports.leip.co.in",
     icon: "📊",
     iconBg: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
     accent: "#7c3aed",
