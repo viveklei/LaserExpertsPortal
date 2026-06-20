@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:5003/api' 
-    : 'https://reports.leip.co.in/api');
+    : window.location.origin + '/work-report/api');
 
 // Check if we are in portal SSO mode (no backend available)
 const isPortalMode = () => {
