@@ -847,7 +847,10 @@ function App() {
           <div className="blob blob-2"></div>
           <div className="blob blob-3"></div>
         </div>
-        <AdminDashboard onClose={() => setShowAdminDashboard(false)} />
+        <AdminDashboard 
+          onClose={() => setShowAdminDashboard(false)} 
+          mode={userRole === 'manager' ? 'manager' : 'admin'} 
+        />
       </div>
     );
   }
@@ -910,9 +913,9 @@ function App() {
             Send via WhatsApp
           </button>
           
-          {(String(userRole).trim().toLowerCase() === 'admin' || userEmail === 'admin@lei.com') && (
+          {(String(userRole).trim().toLowerCase() === 'admin' || String(userRole).trim().toLowerCase() === 'manager' || userEmail === 'admin@lei.com') && (
             <button className="primary admin-console-btn" onClick={() => setShowAdminDashboard(true)}>
-              Admin Console
+              {String(userRole).trim().toLowerCase() === 'manager' ? 'Manager Console' : 'Admin Console'}
             </button>
           )}
 

@@ -167,8 +167,8 @@ function doLogin(user) {
   // Show/Hide Add Application button & Admin sidebar section based on Admin role
   const addAppBtn = $('btn-add-app');
   const adminSection = $('admin-sidebar-section');
-  if (user.role === 'Portal Administrator') {
-    if (addAppBtn) addAppBtn.classList.remove('hidden');
+  if (user.role === 'Portal Administrator' || user.role === 'Operations Manager') {
+    if (addAppBtn) addAppBtn.classList.toggle('hidden', user.role !== 'Portal Administrator');
     if (adminSection) adminSection.classList.remove('hidden');
   } else {
     if (addAppBtn) addAppBtn.classList.add('hidden');
@@ -929,11 +929,12 @@ if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0
   firebase.auth().onAuthStateChanged((firebaseUser) => {
     if (firebaseUser) {
       // User is signed in via Firebase
-      const matchingUser = typeof USERS !== 'undefined' ? USERS.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase()) : null;
-      const role = matchingUser ? matchingUser.role : (
-        (firebaseUser.email === 'admin@lei.com' || firebaseUser.email.toLowerCase().includes('admin')) ? 'Portal Administrator' :
-        firebaseUser.email.toLowerCase().includes('manager') ? 'Operations Manager' : 'Staff'
-      );
+      const emailLower = firebaseUser.email.toLowerCase();
+      const admins = ['admin@lei.com', 'admin@laserexperts.in', 'pd@laserxprts.com'];
+      const managers = ['marketing01@laserxprts.com', 'harisha.prabakaran@laserxprts.com', 'operations@laserxprts.com'];
+      
+      const role = (admins.includes(emailLower) || emailLower.startsWith('admin@') || emailLower.includes('admin')) ? 'Portal Administrator' :
+                   (managers.includes(emailLower) || emailLower.includes('manager')) ? 'Operations Manager' : 'Staff';
       const user = {
         username:  firebaseUser.email,
         name:      firebaseUser.displayName || firebaseUser.email.split('@')[0],

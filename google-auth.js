@@ -47,12 +47,12 @@ window.handleGoogleCredentialResponse = function (response) {
   if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0 || firebaseConfig.apiKey === "YOUR_API_KEY") {
     const payload = _decodeJWT(response.credential);
     if (payload) {
-      // Match with known users or determine based on email
-      const matchingUser = typeof USERS !== 'undefined' ? USERS.find(u => u.email.toLowerCase() === payload.email.toLowerCase()) : null;
-      const role = matchingUser ? matchingUser.role : (
-        (payload.email === 'admin@lei.com' || payload.email.toLowerCase().includes('admin')) ? 'Portal Administrator' :
-        payload.email.toLowerCase().includes('manager') ? 'Operations Manager' : 'Staff'
-      );
+      const emailLower = payload.email.toLowerCase();
+      const admins = ['admin@lei.com', 'admin@laserexperts.in', 'pd@laserxprts.com'];
+      const managers = ['marketing01@laserxprts.com', 'harisha.prabakaran@laserxprts.com', 'operations@laserxprts.com'];
+      
+      const role = (admins.includes(emailLower) || emailLower.startsWith('admin@') || emailLower.includes('admin')) ? 'Portal Administrator' :
+                   (managers.includes(emailLower) || emailLower.includes('manager')) ? 'Operations Manager' : 'Staff';
       
       const user = {
         username: payload.email,
