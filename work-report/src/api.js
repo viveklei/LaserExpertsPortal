@@ -160,7 +160,9 @@ export const api = {
 
     async getProfile() {
         try {
-          return await tryFetch(`${API_BASE_URL}/profile`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/profile`, { headers: getAuthHeaders() });
+          if (data && typeof data === 'object') return data;
+          throw new Error('Invalid profile data format');
         } catch(e) {
           return getLocalProfile();
         }
@@ -180,7 +182,9 @@ export const api = {
 
     async getReports() {
         try {
-          return await tryFetch(`${API_BASE_URL}/reports`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/reports`, { headers: getAuthHeaders() });
+          if (Array.isArray(data)) return data;
+          throw new Error('Invalid reports format');
         } catch(e) {
           return getLocalReports();
         }
@@ -200,7 +204,9 @@ export const api = {
 
     async getSettings() {
         try {
-          return await tryFetch(`${API_BASE_URL}/settings`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/settings`, { headers: getAuthHeaders() });
+          if (data && typeof data === 'object') return data;
+          throw new Error('Invalid settings format');
         } catch(e) {
           return getLocalSettings();
         }
@@ -220,7 +226,9 @@ export const api = {
 
     async getDraft() {
         try {
-          return await tryFetch(`${API_BASE_URL}/draft`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/draft`, { headers: getAuthHeaders() });
+          if (data && typeof data === 'object') return data;
+          throw new Error('Invalid draft format');
         } catch(e) {
           return getLocalDraft();
         }
@@ -241,7 +249,9 @@ export const api = {
     // Admin Methods
     async getAdminUsers() {
         try {
-          return await tryFetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() });
+          if (Array.isArray(data)) return data;
+          throw new Error('Invalid users format');
         } catch(e) {
           return [];
         }
@@ -249,7 +259,9 @@ export const api = {
 
     async getAllReports() {
         try {
-          return await tryFetch(`${API_BASE_URL}/admin/all-reports`, { headers: getAuthHeaders() });
+          const data = await tryFetch(`${API_BASE_URL}/admin/all-reports`, { headers: getAuthHeaders() });
+          if (Array.isArray(data)) return data;
+          throw new Error('Invalid reports format');
         } catch(e) {
           return getLocalReports();
         }
